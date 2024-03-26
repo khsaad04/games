@@ -4,7 +4,7 @@
 #define WIN_HEIGHT 600
 #define CELL_SIZE 20
 
-static const Color BG_COLOR_1 = {49, 50, 68, 255};
+static const Color BG_COLOR_1 = {24, 24, 37, 255};
 static const Color BG_COLOR_2 = {30, 30, 46, 255};
 static const Vector2 offset = {WIN_WIDTH % CELL_SIZE, WIN_HEIGHT % CELL_SIZE};
 
