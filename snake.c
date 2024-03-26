@@ -10,7 +10,8 @@ static const Vector2 offset = {WIN_WIDTH % CELL_SIZE, WIN_HEIGHT % CELL_SIZE};
 
 static void draw_background();
 
-int main() {
+int main()
+{
     InitWindow(WIN_WIDTH, WIN_HEIGHT, "Snake");
     SetTargetFPS(60);
 
@@ -24,7 +25,8 @@ int main() {
     return 0;
 }
 
-void draw_background() {
+void draw_background() 
+{
     ClearBackground(BG_COLOR_1);
     for (int i = 0; i < WIN_WIDTH / CELL_SIZE; ++i) {
         for (int j = 0; j < WIN_HEIGHT / CELL_SIZE; ++j) {
