@@ -5,7 +5,7 @@
 #define BAR_WIDTH 100
 #define BAR_HEIGHT 10
 #define BALL_RADIUS 10
-#define BALL_SPEED 250
+#define BALL_SPEED 350
 
 typedef struct Enemies {
     Vector2 pos;
@@ -14,7 +14,7 @@ typedef struct Enemies {
     bool alive;
 } Enemies;
 
-static Enemies enemies[256] = {0};
+static Enemies enemies[7][5] = {0};
 
 int main(void) {
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Breakout");
@@ -32,11 +32,13 @@ int main(void) {
     int bar_dx = 1;
 
     for (int i = 0; i < 7; ++i) {
-        enemies[i].pos = (Vector2){BALL_RADIUS * 3 + i * BAR_WIDTH + i*5,
-                                   BALL_RADIUS * 3};
-        enemies[i].size = (Vector2){BAR_WIDTH, BAR_HEIGHT};
-        enemies[i].alive = true;
-        enemies[i].color = RAYWHITE;
+        for (int j = 0; j < 5; ++j) {
+            enemies[i][j].pos = (Vector2){BALL_RADIUS * 3 + i * BAR_WIDTH + i * 5,
+                BALL_RADIUS * 3 + j * BAR_HEIGHT + j * 5};
+            enemies[i][j].size = (Vector2){BAR_WIDTH, BAR_HEIGHT};
+            enemies[i][j].alive = true;
+            enemies[i][j].color = RAYWHITE;
+        }
     }
 
     while (!WindowShouldClose()) {
@@ -69,6 +71,24 @@ int main(void) {
             }
         }
 
+        for (int i = 0; i < 7; ++i) {
+            for (int j = 0; j < 5; ++j) {
+                Rectangle enemy = {
+                    .x = enemies[i][j].pos.x,
+                    .y = enemies[i][j].pos.y,
+                    .width = BAR_WIDTH,
+                    .height = BAR_HEIGHT,
+                };
+                if (CheckCollisionCircleRec((Vector2){ball_x, ball_y}, BALL_RADIUS,
+                            enemy)) {
+                    if (enemies[i][j].alive == true) {
+                        ball_dy = -ball_dy;
+                        enemies[i][j].alive = false;
+                    }
+                }
+            }
+        }
+
         // Bar movement
         if (IsKeyDown(KEY_LEFT)) {
             bar_dx = -1;
@@ -89,12 +109,19 @@ int main(void) {
         }
 
         BeginDrawing();
+
         ClearBackground(BLACK);
-        for (int i = 0; i<7; ++i) {
-            DrawRectangleV(enemies[i].pos, enemies[i].size, enemies[i].color);
+        for (int i = 0; i < 7; ++i) {
+            for (int j = 0; j < 5; ++j) {
+                if (enemies[i][j].alive == true) {
+                    DrawRectangleV(enemies[i][j].pos, enemies[i][j].size,
+                            enemies[i][j].color);
+                }
+            }
         }
         DrawRectangle(bar_x, bar_y, BAR_WIDTH, BAR_HEIGHT, RAYWHITE);
         DrawCircle(ball_x, ball_y, BALL_RADIUS, RAYWHITE);
+
         EndDrawing();
     }
     CloseWindow();
