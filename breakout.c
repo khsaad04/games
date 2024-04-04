@@ -7,8 +7,19 @@
 #define BALL_RADIUS 10
 #define BALL_SPEED 250
 
-int main(void) 
-{
+typedef struct Enemies {
+    Vector2 pos;
+    Vector2 size;
+    Color color;
+    bool alive;
+} Enemies;
+
+static Enemies enemies[256] = {0};
+
+int main(void) {
+    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Breakout");
+    SetTargetFPS(60);
+
     float ball_x = SCREEN_WIDTH / 2.0 - BALL_RADIUS;
     float ball_y = SCREEN_HEIGHT / 2.0 - BALL_RADIUS;
 
@@ -20,11 +31,15 @@ int main(void)
 
     int bar_dx = 1;
 
-    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Breakout");
-    SetTargetFPS(60);
+    for (int i = 0; i < 7; ++i) {
+        enemies[i].pos = (Vector2){BALL_RADIUS * 3 + i * BAR_WIDTH + i*5,
+                                   BALL_RADIUS * 3};
+        enemies[i].size = (Vector2){BAR_WIDTH, BAR_HEIGHT};
+        enemies[i].alive = true;
+        enemies[i].color = RAYWHITE;
+    }
 
-    while (!WindowShouldClose()) 
-    {
+    while (!WindowShouldClose()) {
         Rectangle bar = {
             .x = bar_x,
             .y = bar_y,
@@ -57,12 +72,12 @@ int main(void)
         // Bar movement
         if (IsKeyDown(KEY_LEFT)) {
             bar_dx = -1;
-            bar_x += BALL_SPEED * GetFrameTime() * bar_dx;
+            bar_x += BALL_SPEED * 2 * GetFrameTime() * bar_dx;
         }
 
         if (IsKeyDown(KEY_RIGHT)) {
             bar_dx = 1;
-            bar_x += BALL_SPEED * GetFrameTime() * bar_dx;
+            bar_x += BALL_SPEED * 2 * GetFrameTime() * bar_dx;
         }
 
         if (bar_x > SCREEN_WIDTH - BAR_WIDTH) {
@@ -75,6 +90,9 @@ int main(void)
 
         BeginDrawing();
         ClearBackground(BLACK);
+        for (int i = 0; i<7; ++i) {
+            DrawRectangleV(enemies[i].pos, enemies[i].size, enemies[i].color);
+        }
         DrawRectangle(bar_x, bar_y, BAR_WIDTH, BAR_HEIGHT, RAYWHITE);
         DrawCircle(ball_x, ball_y, BALL_RADIUS, RAYWHITE);
         EndDrawing();
