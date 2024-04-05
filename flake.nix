@@ -14,6 +14,7 @@
           nil
           gdb
           raylib
+          astyle
         ];
       };
       formatter.${system} = pkgs.nixpkgs-fmt;

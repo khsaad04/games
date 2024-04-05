@@ -41,28 +41,42 @@ static Ball ball = {0};
 static Bricks bricks[ROWS][COLS] = {0};
 
 static int enemy_width =
-(SCREEN_WIDTH - BALL_RADIUS * 6 - 5 * (COLS - 1)) / COLS;
+    (SCREEN_WIDTH - BALL_RADIUS * 6 - 5 * (COLS - 1)) / COLS;
 static int enemy_height =
-(SCREEN_HEIGHT * 0.5 - BALL_RADIUS * 3 - 5 * (ROWS - 1)) / ROWS;
+    (SCREEN_HEIGHT * 0.5 - BALL_RADIUS * 3 - 5 * (ROWS - 1)) / ROWS;
 
 void init_game(void) {
     score = 0;
     game = STANDBY;
     pause = false;
-    ball.pos = (Vector2){SCREEN_WIDTH / 2.0,
-        SCREEN_HEIGHT - SCREEN_HEIGHT * 0.1 - PLAYER_HEIGHT};
-    ball.speed = (Vector2){BALL_SPEED, BALL_SPEED};
+    ball.pos = (Vector2) {
+        SCREEN_WIDTH / 2.0,
+                     SCREEN_HEIGHT - SCREEN_HEIGHT * 0.1 - PLAYER_HEIGHT
+    };
+    ball.speed = (Vector2) {
+        BALL_SPEED, BALL_SPEED
+    };
 
-    player.pos = (Vector2){SCREEN_WIDTH / 2.0 - PLAYER_WIDTH / 2.0,
-        SCREEN_HEIGHT - SCREEN_HEIGHT * 0.1};
-    player.size = (Vector2){PLAYER_WIDTH, PLAYER_HEIGHT};
-    player.speed = (Vector2){BALL_SPEED * 2, 0};
+    player.pos = (Vector2) {
+        SCREEN_WIDTH / 2.0 - PLAYER_WIDTH / 2.0,
+                     SCREEN_HEIGHT - SCREEN_HEIGHT * 0.1
+    };
+    player.size = (Vector2) {
+        PLAYER_WIDTH, PLAYER_HEIGHT
+    };
+    player.speed = (Vector2) {
+        BALL_SPEED * 2, 0
+    };
 
     for (int i = 0; i < ROWS; ++i) {
         for (int j = 0; j < COLS; ++j) {
-            bricks[i][j].pos = (Vector2){BALL_RADIUS * 3 + j * enemy_width + j * 5,
-                BALL_RADIUS * 3 + i * enemy_height + i * 5};
-            bricks[i][j].size = (Vector2){enemy_width, enemy_height};
+            bricks[i][j].pos = (Vector2) {
+                BALL_RADIUS * 3 + j * enemy_width + j * 5,
+                            BALL_RADIUS * 3 + i * enemy_height + i * 5
+            };
+            bricks[i][j].size = (Vector2) {
+                enemy_width, enemy_height
+            };
             bricks[i][j].alive = true;
             bricks[i][j].color = RAYWHITE;
         }
@@ -143,8 +157,10 @@ void update_game(void) {
                         .width = enemy_width,
                         .height = enemy_height,
                     };
-                    if (CheckCollisionCircleRec((Vector2){ball.pos.x, ball.pos.y},
-                                BALL_RADIUS, enemy)) {
+                    if (CheckCollisionCircleRec((Vector2) {
+                    ball.pos.x, ball.pos.y
+                },
+                BALL_RADIUS, enemy)) {
                         if (bricks[i][j].alive == true) {
                             score += 1;
                             ball.speed.y *= -1;
@@ -177,29 +193,29 @@ void draw_game(void) {
     DrawCircleV(ball.pos, BALL_RADIUS, RAYWHITE);
 
     switch (game) {
-        case STANDBY:
-            DrawText(TextFormat("Press <- or -> to start"),
-                    SCREEN_WIDTH / 2 - MeasureText("Press Enter to start", 20) / 2,
-                    SCREEN_HEIGHT * .75, 20, RAYWHITE);
-            break;
-        case RUNNING:
-            DrawText(TextFormat("Score: %d", score), 20, SCREEN_HEIGHT - 25, 20,
-                    RAYWHITE);
-            break;
-        case OVER:
-            DrawText(TextFormat("GAME OVER"),
-                    SCREEN_WIDTH / 2 - MeasureText("GAME OVER", 30) / 2,
-                    SCREEN_HEIGHT * .55, 30, RAYWHITE);
-            DrawText(TextFormat("Score: %d", score),
-                    SCREEN_WIDTH / 2 -
-                    MeasureText(TextFormat("Score: %d", score), 30) / 2,
-                    SCREEN_HEIGHT * .65, 30, RAYWHITE);
-            DrawText(
-                    TextFormat("Press <space> to restart", score),
-                    SCREEN_WIDTH / 2 -
-                    MeasureText(TextFormat("Press <space> to restart", score), 30) / 2,
-                    SCREEN_HEIGHT * .75, 30, RAYWHITE);
-            break;
+    case STANDBY:
+        DrawText(TextFormat("Press <- or -> to start"),
+                 SCREEN_WIDTH / 2 - MeasureText("Press Enter to start", 20) / 2,
+                 SCREEN_HEIGHT * .75, 20, RAYWHITE);
+        break;
+    case RUNNING:
+        DrawText(TextFormat("Score: %d", score), 20, SCREEN_HEIGHT - 25, 20,
+                 RAYWHITE);
+        break;
+    case OVER:
+        DrawText(TextFormat("GAME OVER"),
+                 SCREEN_WIDTH / 2 - MeasureText("GAME OVER", 30) / 2,
+                 SCREEN_HEIGHT * .55, 30, RAYWHITE);
+        DrawText(TextFormat("Score: %d", score),
+                 SCREEN_WIDTH / 2 -
+                 MeasureText(TextFormat("Score: %d", score), 30) / 2,
+                 SCREEN_HEIGHT * .65, 30, RAYWHITE);
+        DrawText(
+            TextFormat("Press <space> to restart", score),
+            SCREEN_WIDTH / 2 -
+            MeasureText(TextFormat("Press <space> to restart", score), 30) / 2,
+            SCREEN_HEIGHT * .75, 30, RAYWHITE);
+        break;
     }
 
     EndDrawing();
