@@ -9,6 +9,8 @@
 #define ROWS 10
 #define COLS 10
 
+enum State { STANDBY, RUNNING, OVER };
+
 typedef struct Player {
     Vector2 pos;
     Vector2 size;
@@ -30,6 +32,7 @@ typedef struct Bricks {
     bool alive;
 } Bricks;
 
+static enum State game;
 static int score = 0;
 static Player player = {0};
 static Ball ball = {0};
@@ -42,7 +45,8 @@ static int enemy_height =
 
 void init_game(void) {
     score = 0;
-    ball.pos = (Vector2){SCREEN_WIDTH / 2.0 - BALL_RADIUS,
+    game = STANDBY;
+    ball.pos = (Vector2){SCREEN_WIDTH / 2.0,
         SCREEN_HEIGHT - SCREEN_HEIGHT * 0.1 - PLAYER_HEIGHT};
     ball.speed = (Vector2){BALL_SPEED, BALL_SPEED};
 
@@ -63,6 +67,14 @@ void init_game(void) {
 }
 
 void update_game(void) {
+    if (IsKeyPressed(KEY_ENTER)) {
+        game = RUNNING;
+    }
+
+    if (game != 1) {
+        return;
+    }
+
     // ball movement
     ball.pos.x += ball.speed.x * GetFrameTime();
     ball.pos.y += ball.speed.y * GetFrameTime();
@@ -72,8 +84,12 @@ void update_game(void) {
         ball.speed.x *= -1;
     }
 
-    if (ball.pos.y < 0 || ball.pos.y > SCREEN_HEIGHT) {
+    if (ball.pos.y < 0) {
         ball.speed.y *= -1;
+    }
+
+    if (ball.pos.y > SCREEN_HEIGHT) {
+        game = OVER;
     }
 
     // ball-player collision
@@ -151,8 +167,27 @@ void draw_game(void) {
     }
     DrawRectangleV(player.pos, player.size, RAYWHITE);
     DrawCircleV(ball.pos, BALL_RADIUS, RAYWHITE);
-    DrawText(TextFormat("Score: %d", score), 20, SCREEN_HEIGHT - 25, 20,
-            RAYWHITE);
+
+    switch (game) {
+        case STANDBY:
+            DrawText(TextFormat("Press Enter to start"),
+                    SCREEN_WIDTH / 2 - MeasureText("Press Enter to start", 20) / 2,
+                    SCREEN_HEIGHT * .75, 20, RAYWHITE);
+            break;
+        case RUNNING:
+            DrawText(TextFormat("Score: %d", score), 20, SCREEN_HEIGHT - 25, 20,
+                    RAYWHITE);
+            break;
+        case OVER:
+            DrawText(TextFormat("Score: %d", score),
+                    SCREEN_WIDTH / 2 -
+                    MeasureText(TextFormat("Score: %d", score), 30) / 2,
+                    SCREEN_HEIGHT * .75, 30, RAYWHITE);
+            DrawText(TextFormat("GAME OVER"),
+                    SCREEN_WIDTH / 2 - MeasureText("GAME OVER", 30) / 2,
+                    SCREEN_HEIGHT * .6, 30, RAYWHITE);
+            break;
+    }
 
     EndDrawing();
 }
