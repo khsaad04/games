@@ -6,7 +6,7 @@
 #define PLAYER_HEIGHT 15
 #define BALL_RADIUS 10
 #define BALL_SPEED 300
-#define ROWS 5
+#define ROWS 10
 #define COLS 10
 
 typedef struct Player {
@@ -30,17 +30,20 @@ typedef struct Bricks {
     bool alive;
 } Bricks;
 
+static int score = 0;
 static Player player = {0};
 static Ball ball = {0};
 static Bricks bricks[ROWS][COLS] = {0};
 
 static int enemy_width =
 (SCREEN_WIDTH - BALL_RADIUS * 6 - 5 * (COLS - 1)) / COLS;
-static int enemy_height = PLAYER_HEIGHT;
+static int enemy_height =
+(SCREEN_HEIGHT * 0.5 - BALL_RADIUS * 3 - 5 * (ROWS - 1)) / ROWS;
 
 void init_game(void) {
+    score = 0;
     ball.pos = (Vector2){SCREEN_WIDTH / 2.0 - BALL_RADIUS,
-        SCREEN_HEIGHT / 2.0 - BALL_RADIUS};
+        SCREEN_HEIGHT - SCREEN_HEIGHT * 0.1 - PLAYER_HEIGHT};
     ball.speed = (Vector2){BALL_SPEED, BALL_SPEED};
 
     player.pos = (Vector2){SCREEN_WIDTH / 2.0 - PLAYER_WIDTH / 2.0,
@@ -69,12 +72,8 @@ void update_game(void) {
         ball.speed.x *= -1;
     }
 
-    if (ball.pos.y < 0) {
+    if (ball.pos.y < 0 || ball.pos.y > SCREEN_HEIGHT) {
         ball.speed.y *= -1;
-    }
-
-    if (ball.pos.y > SCREEN_HEIGHT) {
-        CloseWindow();
     }
 
     // ball-player collision
@@ -86,15 +85,13 @@ void update_game(void) {
     };
 
     if (CheckCollisionCircleRec(ball.pos, BALL_RADIUS, player_rect)) {
+        ball.speed.y *= -1;
         if (player.speed.x < 0 && ball.speed.x > 0) {
             ball.speed.x *= -1;
         }
-
         if (player.speed.x > 0 && ball.speed.x < 0) {
             ball.speed.x *= -1;
         }
-
-        ball.speed.y *= -1;
     }
 
     // ball-brick collision
@@ -109,6 +106,7 @@ void update_game(void) {
             if (CheckCollisionCircleRec((Vector2){ball.pos.x, ball.pos.y},
                         BALL_RADIUS, enemy)) {
                 if (bricks[i][j].alive == true) {
+                    score += 1;
                     ball.speed.y *= -1;
                     bricks[i][j].alive = false;
                 }
@@ -153,6 +151,8 @@ void draw_game(void) {
     }
     DrawRectangleV(player.pos, player.size, RAYWHITE);
     DrawCircleV(ball.pos, BALL_RADIUS, RAYWHITE);
+    DrawText(TextFormat("Score: %d", score), 20, SCREEN_HEIGHT - 25, 20,
+            RAYWHITE);
 
     EndDrawing();
 }
