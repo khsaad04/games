@@ -3,6 +3,7 @@
 
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 600
+#define FPS 120
 #define PLAYER_WIDTH 75
 #define PLAYER_HEIGHT 15
 #define BALL_RADIUS 10
@@ -226,7 +227,7 @@ void draw_game(void)
 int main(void)
 {
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Breakout");
-    SetTargetFPS(60);
+    SetTargetFPS(FPS);
 
     init_game();
 
@@ -236,6 +237,5 @@ int main(void)
     }
 
     CloseWindow();
-    printf("Score: %d\n", score);
     return 0;
 }
