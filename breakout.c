@@ -56,7 +56,7 @@ void init_game(void)
     ball.pos = (Vector2)
     {
         SCREEN_WIDTH / 2.0,
-                     SCREEN_HEIGHT - SCREEN_HEIGHT * 0.1 - PLAYER_HEIGHT
+                     SCREEN_HEIGHT - SCREEN_HEIGHT * 0.1 - BALL_RADIUS - PLAYER_HEIGHT
     };
     ball.speed = (Vector2)
     {
