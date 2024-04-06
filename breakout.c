@@ -171,6 +171,7 @@ void update_game(void)
                 .height = PLAYER_HEIGHT,
             };
 
+            // TODO: Fix collisions
             if (CheckCollisionCircleRec(ball.pos, BALL_RADIUS, player_rect))
             {
                 ball.speed.y *= -1;
