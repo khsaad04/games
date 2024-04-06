@@ -10,7 +10,7 @@
 #define ROWS 10
 #define COLS 10
 
-enum State { STANDBY, RUNNING, OVER };
+enum State { STANDBY, RUNNING, PAUSED, OVER };
 
 typedef struct Player {
     Vector2 pos;
@@ -34,7 +34,6 @@ typedef struct Bricks {
 } Bricks;
 
 static enum State game;
-static bool pause;
 static int score = 0;
 static Player player = {0};
 static Ball ball = {0};
@@ -49,7 +48,6 @@ void init_game(void)
 {
     score = 0;
     game = STANDBY;
-    pause = false;
     ball.pos =
         (Vector2){SCREEN_WIDTH / 2.0, SCREEN_HEIGHT - SCREEN_HEIGHT * 0.1 -
                                           BALL_RADIUS - PLAYER_HEIGHT};
@@ -78,99 +76,99 @@ void update_game(void)
         game = RUNNING;
     }
 
-    if (game == 1) {
+    if (game == RUNNING) {
         if (IsKeyPressed(KEY_P)) {
-            pause = !pause;
+            game = PAUSED;
         }
-        if (!pause) {
-            // player movement
-            if (IsKeyDown(KEY_LEFT)) {
-                game = RUNNING;
-                if (player.speed.x > 0) {
-                    player.speed.x *= -1;
-                }
-                player.pos.x += player.speed.x * GetFrameTime();
+        // player movement
+        if (IsKeyDown(KEY_LEFT)) {
+            game = RUNNING;
+            if (player.speed.x > 0) {
+                player.speed.x *= -1;
             }
+            player.pos.x += player.speed.x * GetFrameTime();
+        }
 
-            if (IsKeyDown(KEY_RIGHT)) {
-                game = RUNNING;
-                if (player.speed.x < 0) {
-                    player.speed.x *= -1;
-                }
-                player.pos.x += player.speed.x * GetFrameTime();
+        if (IsKeyDown(KEY_RIGHT)) {
+            game = RUNNING;
+            if (player.speed.x < 0) {
+                player.speed.x *= -1;
             }
+            player.pos.x += player.speed.x * GetFrameTime();
+        }
 
-            if (player.pos.x > SCREEN_WIDTH - PLAYER_WIDTH) {
-                player.pos.x = SCREEN_WIDTH - PLAYER_WIDTH;
-            }
+        if (player.pos.x > SCREEN_WIDTH - PLAYER_WIDTH) {
+            player.pos.x = SCREEN_WIDTH - PLAYER_WIDTH;
+        }
 
-            if (player.pos.x < 0) {
-                player.pos.x = 0;
-            }
+        if (player.pos.x < 0) {
+            player.pos.x = 0;
+        }
 
-            // ball movement
-            ball.pos.x += ball.speed.x * GetFrameTime();
-            ball.pos.y += ball.speed.y * GetFrameTime();
+        // ball movement
+        ball.pos.x += ball.speed.x * GetFrameTime();
+        ball.pos.y += ball.speed.y * GetFrameTime();
 
-            // ball-wall collision
-            if (ball.pos.x > SCREEN_WIDTH || ball.pos.x < 0) {
+        // ball-wall collision
+        if (ball.pos.x > SCREEN_WIDTH || ball.pos.x < 0) {
+            ball.speed.x *= -1;
+        }
+
+        if (ball.pos.y < 0) {
+            ball.speed.y *= -1;
+        }
+
+        if (ball.pos.y > SCREEN_HEIGHT + BALL_RADIUS) {
+            game = OVER;
+        }
+
+        // ball-player collision
+        Rectangle player_rect = {
+            .x = player.pos.x,
+            .y = player.pos.y,
+            .width = PLAYER_WIDTH,
+            .height = PLAYER_HEIGHT,
+        };
+
+        // TODO: Fix collisions
+        if (CheckCollisionCircleRec(ball.pos, BALL_RADIUS, player_rect)) {
+            ball.speed.y *= -1;
+            if (player.speed.x < 0 && ball.speed.x > 0) {
                 ball.speed.x *= -1;
             }
-
-            if (ball.pos.y < 0) {
-                ball.speed.y *= -1;
+            if (player.speed.x > 0 && ball.speed.x < 0) {
+                ball.speed.x *= -1;
             }
+        }
 
-            if (ball.pos.y > SCREEN_HEIGHT + BALL_RADIUS) {
-                game = OVER;
-            }
-
-            // ball-player collision
-            Rectangle player_rect = {
-                .x = player.pos.x,
-                .y = player.pos.y,
-                .width = PLAYER_WIDTH,
-                .height = PLAYER_HEIGHT,
-            };
-
-            // TODO: Fix collisions
-            if (CheckCollisionCircleRec(ball.pos, BALL_RADIUS, player_rect)) {
-                ball.speed.y *= -1;
-                if (player.speed.x < 0 && ball.speed.x > 0) {
-                    ball.speed.x *= -1;
-                }
-                if (player.speed.x > 0 && ball.speed.x < 0) {
-                    ball.speed.x *= -1;
-                }
-            }
-
-            // ball-brick collision
-            for (int i = 0; i < ROWS; ++i) {
-                for (int j = 0; j < COLS; ++j) {
-                    Rectangle enemy = {
-                        .x = bricks[i][j].pos.x,
-                        .y = bricks[i][j].pos.y,
-                        .width = enemy_width,
-                        .height = enemy_height,
-                    };
-                    if (CheckCollisionCircleRec(
-                            (Vector2){ball.pos.x, ball.pos.y}, BALL_RADIUS,
-                            enemy)) {
-                        if (bricks[i][j].alive == true) {
-                            score += 1;
-                            ball.speed.y *= -1;
-                            bricks[i][j].alive = false;
-                        }
+        // ball-brick collision
+        for (int i = 0; i < ROWS; ++i) {
+            for (int j = 0; j < COLS; ++j) {
+                Rectangle enemy = {
+                    .x = bricks[i][j].pos.x,
+                    .y = bricks[i][j].pos.y,
+                    .width = enemy_width,
+                    .height = enemy_height,
+                };
+                if (CheckCollisionCircleRec((Vector2){ball.pos.x, ball.pos.y},
+                                            BALL_RADIUS, enemy)) {
+                    if (bricks[i][j].alive == true) {
+                        score += 1;
+                        ball.speed.y *= -1;
+                        bricks[i][j].alive = false;
                     }
                 }
             }
         }
     }
-    else {
-        if (IsKeyPressed(KEY_SPACE)) {
-            init_game();
-            game = STANDBY;
+    else if (game == PAUSED) {
+        if (IsKeyPressed(KEY_P)) {
+            game = RUNNING;
         }
+    }
+    else if (IsKeyPressed(KEY_SPACE)) {
+        init_game();
+        game = STANDBY;
     }
 }
 
@@ -199,6 +197,11 @@ void draw_game(void)
     case RUNNING:
         DrawText(TextFormat("Score: %d", score), 20, SCREEN_HEIGHT - 25, 20,
                  RAYWHITE);
+        break;
+    case PAUSED:
+        DrawText(TextFormat("Press P to resume"),
+                 SCREEN_WIDTH / 2 - MeasureText("Press P to resume", 30) / 2,
+                 SCREEN_HEIGHT * .55, 30, RAYWHITE);
         break;
     case OVER:
         DrawText(TextFormat("GAME OVER"),
