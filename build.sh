@@ -1,2 +1,5 @@
 #!/usr/bin/env bash
-gcc -Wall -Wextra -o build/breakout breakout.c -lraylib
+if [ ! -d "build" ]; then
+    mkdir build
+fi
+cc -Wall -Wextra -o build/breakout breakout.c -lraylib
