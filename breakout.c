@@ -1,11 +1,10 @@
 #include <raylib.h>
-#include <stdio.h>
 
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 600
-#define FPS 120
-#define PLAYER_WIDTH 75
-#define PLAYER_HEIGHT 15
+#define FPS 60
+#define PLAYER_WIDTH 100
+#define PLAYER_HEIGHT 10
 #define BALL_RADIUS 10
 #define BALL_SPEED 300
 #define ROWS 10
@@ -127,12 +126,12 @@ void update_game(void)
         Rectangle player_rect = {
             .x = player.pos.x,
             .y = player.pos.y,
-            .width = PLAYER_WIDTH,
-            .height = PLAYER_HEIGHT,
+            .width = player.size.x,
+            .height = player.size.y,
         };
 
-        // TODO: Fix collisions
         if (CheckCollisionCircleRec(ball.pos, BALL_RADIUS, player_rect)) {
+            ball.pos.y = player.pos.y - BALL_RADIUS;
             ball.speed.y *= -1;
             if (player.speed.x < 0 && ball.speed.x > 0) {
                 ball.speed.x *= -1;
