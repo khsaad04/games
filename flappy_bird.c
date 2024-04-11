@@ -15,16 +15,24 @@ typedef struct {
 static enum State game;
 static int score;
 static Bird bird = {0};
+static float velocity;
+static float accel;
 
 void init_game(void)
 {
     game = STANDBY;
     score = 0;
+    velocity = 0;
+    accel = 1;
     bird.pos = (Vector2){SCREEN_WIDTH / 2.0, SCREEN_HEIGHT / 2.0};
     bird.color = RAYWHITE;
 }
 
-void update_game(void) { bird.pos.y += 10; }
+void update_game(void)
+{
+    bird.pos.y += velocity;
+    velocity += accel;
+}
 
 void draw_game(void)
 {
