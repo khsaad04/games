@@ -13,9 +13,33 @@
           clang-tools
           nil
           gdb
-          raylib
           astyle
+          raylib
         ];
+      };
+      packages.${system} = {
+        breakout = pkgs.stdenv.mkDerivation {
+          name = "breakout";
+          src = ./.;
+          buildInputs = [ pkgs.raylib ];
+          buildPhase = ''
+            mkdir -p $out/bin
+            cc -Wall -Wextra -o breakout breakout.c -lraylib
+            chmod +x breakout
+            cp breakout $out/bin
+          '';
+        };
+        flappy-bird = pkgs.stdenv.mkDerivation {
+          name = "flappy_bird";
+          src = ./.;
+          buildInputs = [ pkgs.raylib ];
+          buildPhase = ''
+            mkdir -p $out/bin
+            cc -Wall -Wextra -o flappy_bird flappy_bird.c -lraylib
+            chmod +x flappy_bird
+            cp flappy_bird $out/bin
+          '';
+        };
       };
       formatter.${system} = pkgs.nixpkgs-fmt;
     };
