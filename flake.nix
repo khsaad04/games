@@ -8,11 +8,12 @@
       systems = [ "x86_64-linux" ];
       perSystem = { pkgs, ... }: {
         devShells.default = pkgs.mkShell {
-          packages = with pkgs; [
-            clang-tools
-            nil
-            gdb
-            raylib
+          packages = [
+            pkgs.clang-tools
+            pkgs.clang
+            pkgs.nil
+            pkgs.gdb
+            pkgs.raylib
           ];
         };
         packages = {
