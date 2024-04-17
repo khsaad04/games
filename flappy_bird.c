@@ -8,7 +8,7 @@
 enum State { STANDBY, RUNNING, PAUSED, OVER };
 
 typedef struct {
-    Vector2 pos;
+    Vector2 pos, radius;
     Color color;
 } Bird;
 
@@ -25,21 +25,23 @@ void init_game(void)
     velocity = 0;
     accel = 1;
     bird.pos = (Vector2){SCREEN_WIDTH / 2.0, SCREEN_HEIGHT / 2.0};
+    bird.radius = (Vector2){BIRD_RADIUS, BIRD_RADIUS};
     bird.color = RAYWHITE;
 }
 
 void update_game(void)
 {
     bird.pos.y += velocity;
+    bird.radius.y += velocity * .02;
+    bird.radius.x -= velocity * .02;
     velocity += accel;
+
     if (IsKeyPressed(KEY_K)) {
         velocity = -20;
     }
-    if (bird.pos.y < 0 - BIRD_RADIUS) {
-        bird.pos.y = 0 - BIRD_RADIUS;
-    }
-    if (bird.pos.y > SCREEN_HEIGHT + BIRD_RADIUS) {
-        bird.pos.y = SCREEN_HEIGHT + BIRD_RADIUS;
+
+    if (bird.pos.y < 0 - BIRD_RADIUS ||
+        bird.pos.y > SCREEN_HEIGHT + BIRD_RADIUS) {
     }
 }
 
@@ -47,7 +49,8 @@ void draw_game(void)
 {
     BeginDrawing();
     ClearBackground(BLACK);
-    DrawCircleV(bird.pos, BIRD_RADIUS, bird.color);
+    DrawEllipse(bird.pos.x, bird.pos.y, bird.radius.x, bird.radius.y,
+                bird.color);
     EndDrawing();
 }
 
