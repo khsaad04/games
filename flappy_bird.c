@@ -2,7 +2,7 @@
 
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 600
-#define BIRD_RADIUS 10
+#define BIRD_RADIUS 20
 #define FPS 60
 
 enum State { STANDBY, RUNNING, PAUSED, OVER };
@@ -32,6 +32,15 @@ void update_game(void)
 {
     bird.pos.y += velocity;
     velocity += accel;
+    if (IsKeyPressed(KEY_K)) {
+        velocity = -20;
+    }
+    if (bird.pos.y < 0 - BIRD_RADIUS) {
+        bird.pos.y = 0 - BIRD_RADIUS;
+    }
+    if (bird.pos.y > SCREEN_HEIGHT + BIRD_RADIUS) {
+        bird.pos.y = SCREEN_HEIGHT + BIRD_RADIUS;
+    }
 }
 
 void draw_game(void)
@@ -44,7 +53,7 @@ void draw_game(void)
 
 int main(void)
 {
-    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Breakout");
+    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Flappy Bird");
     SetTargetFPS(FPS);
 
     init_game();
