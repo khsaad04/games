@@ -58,9 +58,6 @@ void init_game(void)
 
 void update_game(void)
 {
-    if (IsKeyPressed(KEY_SPACE)) {
-        game = RUNNING;
-    }
     if (game == RUNNING) {
         bird.pos.y += bird_velocity;
         bird.radius.y -= bird_velocity * .0075;
@@ -70,6 +67,10 @@ void update_game(void)
 
         if (IsKeyPressed(KEY_SPACE)) {
             bird_velocity = -10;
+        }
+
+        if (IsKeyPressed(KEY_P)) {
+            game = PAUSED;
         }
 
         for (int i = 0; i < 3; ++i) {
@@ -107,6 +108,19 @@ void update_game(void)
                 game = OVER;
             }
         }
+    }
+    else if (game == PAUSED && IsKeyPressed(KEY_P)) {
+        game = RUNNING;
+    }
+
+    else if (game == OVER && IsKeyPressed(KEY_SPACE)) {
+        init_game();
+        game = STANDBY;
+    }
+
+    else if (game != OVER && IsKeyPressed(KEY_SPACE)) {
+        bird_velocity = -10;
+        game = RUNNING;
     }
 }
 
