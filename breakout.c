@@ -72,17 +72,12 @@ void init_game(void)
 
 void update_game(void)
 {
-    if (IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_RIGHT)) {
-        game = RUNNING;
-    }
-
     if (game == RUNNING) {
         if (IsKeyPressed(KEY_P)) {
             game = PAUSED;
         }
         // player movement
         if (IsKeyDown(KEY_LEFT)) {
-            game = RUNNING;
             if (player.speed.x > 0) {
                 player.speed.x *= -1;
             }
@@ -166,9 +161,14 @@ void update_game(void)
             game = RUNNING;
         }
     }
+
     else if (IsKeyPressed(KEY_SPACE)) {
         init_game();
         game = STANDBY;
+    }
+
+    else if (IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_RIGHT)) {
+        game = RUNNING;
     }
 }
 
