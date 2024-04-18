@@ -20,21 +20,21 @@
           breakout = pkgs.stdenv.mkDerivation {
             name = "breakout";
             src = ./.;
-            buildInputs = [ pkgs.raylib ];
+            buildInputs = [ pkgs.raylib pkgs.clang ];
             buildPhase = ''
               mkdir -p $out/bin
-              cc -Wall -Wextra -o breakout breakout.c -lraylib
+              clang -O3 -Wall -Wextra -o breakout breakout.c -lraylib
               chmod +x breakout
               cp breakout $out/bin
             '';
           };
-          flappy-bird = pkgs.stdenv.mkDerivation {
+          flappy_bird = pkgs.stdenv.mkDerivation {
             name = "flappy_bird";
             src = ./.;
-            buildInputs = [ pkgs.raylib ];
+            buildInputs = [ pkgs.raylib pkgs.clang ];
             buildPhase = ''
               mkdir -p $out/bin
-              cc -Wall -Wextra -o flappy_bird flappy_bird.c -lraylib
+              clang -O3 -Wall -Wextra -o flappy_bird flappy_bird.c -lraylib
               chmod +x flappy_bird
               cp flappy_bird $out/bin
             '';
