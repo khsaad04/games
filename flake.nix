@@ -16,30 +16,26 @@
             pkgs.raylib
           ];
         };
-        packages = {
-          breakout = pkgs.stdenv.mkDerivation {
-            name = "breakout";
-            src = ./.;
-            buildInputs = [ pkgs.raylib pkgs.clang ];
-            buildPhase = ''
-              mkdir -p $out/bin
-              clang -O3 -Wall -Wextra -o breakout breakout.c -lraylib
-              chmod +x breakout
-              cp breakout $out/bin
-            '';
+        packages =
+          let
+            buildPackage = name: pkgs.stdenv.mkDerivation {
+              name = "${name}";
+              src = ./.;
+              nativeBuildInputs = [ pkgs.clang ];
+              buildInputs = [ pkgs.raylib pkgs.pkg-config ];
+              buildPhase = ''
+                mkdir -p $out/bin
+                clang -O3 -Wall -Wextra -o ${name} ${name}.c -lraylib
+                chmod +x ${name}
+                cp ${name} $out/bin
+              '';
+            };
+          in
+          rec{
+            default = breakout;
+            breakout = buildPackage "breakout";
+            flappy_bird = buildPackage "flappy_bird";
           };
-          flappy_bird = pkgs.stdenv.mkDerivation {
-            name = "flappy_bird";
-            src = ./.;
-            buildInputs = [ pkgs.raylib pkgs.clang ];
-            buildPhase = ''
-              mkdir -p $out/bin
-              clang -O3 -Wall -Wextra -o flappy_bird flappy_bird.c -lraylib
-              chmod +x flappy_bird
-              cp flappy_bird $out/bin
-            '';
-          };
-        };
         formatter = pkgs.nixpkgs-fmt;
       };
     };
