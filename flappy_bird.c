@@ -139,10 +139,21 @@ void draw_game(void)
     BeginDrawing();
     ClearBackground(BLACK);
 
+    // Game intro
+    if (game == STANDBY) {
+        DrawText(TextFormat("Press <Space> to start"),
+                 screen_width / 2 -
+                     MeasureText("Press <Space> to start", 20) / 2,
+                 screen_height / 2, 20, GRAY);
+    }
+
     // Score
-    DrawText(TextFormat("%d", score),
-             screen_width / 2 - MeasureText(TextFormat("%d", score), 50) / 2,
-             screen_height / 2, 50, GRAY);
+    if (score > 0) {
+        DrawText(TextFormat("%d", score),
+                 screen_width / 2 -
+                     MeasureText(TextFormat("%d", score), 100) / 2,
+                 screen_height / 2, 100, GRAY);
+    }
 
     // Bird
     DrawEllipse(bird.pos.x, bird.pos.y, bird.radius.x, bird.radius.y,
