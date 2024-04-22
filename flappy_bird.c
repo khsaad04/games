@@ -144,7 +144,7 @@ void draw_game(void)
         DrawText(TextFormat("Press <Space> to start"),
                  screen_width / 2 -
                      MeasureText("Press <Space> to start", 20) / 2,
-                 screen_height / 2, 20, GRAY);
+                 screen_height / 2 - 20 / 2, 20, GRAY);
     }
 
     // Score
@@ -152,7 +152,7 @@ void draw_game(void)
         DrawText(TextFormat("%d", score),
                  screen_width / 2 -
                      MeasureText(TextFormat("%d", score), 100) / 2,
-                 screen_height / 2, 100, GRAY);
+                 screen_height / 2 - 100 / 2, 100, GRAY);
     }
 
     // Bird
