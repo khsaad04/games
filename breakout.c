@@ -167,7 +167,7 @@ void update_game(void)
         game = STANDBY;
     }
 
-    else if (IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_RIGHT)) {
+    else if (game == STANDBY && (IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_RIGHT))) {
         game = RUNNING;
     }
 }
