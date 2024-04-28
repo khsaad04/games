@@ -32,7 +32,7 @@
                   ];
                   buildPhase = ''
                     mkdir -p $out/bin
-                    clang -O3 -Wall -Wextra -o ${name} ${name}.c -lraylib
+                    clang -O3 -Wall -Wextra -o ${name} ./src/${name}.c -lraylib
                     chmod +x ${name}
                     cp ${name} $out/bin
                   '';
