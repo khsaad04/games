@@ -41,7 +41,7 @@ void init_game(void)
 {
     game = STANDBY;
     score = 0;
-    snake.len = 3;
+    snake.len = 1;
     for (size_t i = 0; i < snake_cap; ++i) {
         snake.cells[i].pos = (Vector2){offset.x / 2, offset.y / 2};
         snake.cells[i].size = (Vector2){cell_size, cell_size};
@@ -70,14 +70,12 @@ void update_game(void)
         }
 
         for (size_t i = 0; i < snake.len; ++i) {
-            if (snake.cells[i].pos.x < offset.x / 2)
-                snake.cells[i].pos.x = offset.x / 2;
-            if (snake.cells[i].pos.x > screen_width - offset.x / 2 - cell_size)
-                snake.cells[i].pos.x = screen_width - offset.x / 2 - cell_size;
-            if (snake.cells[i].pos.y < offset.y / 2)
-                snake.cells[i].pos.y = offset.y / 2;
-            if (snake.cells[i].pos.y > screen_height - offset.x / 2 - cell_size)
-                snake.cells[i].pos.y = screen_height - offset.y / 2 - cell_size;
+            if (snake.cells[i].pos.x < offset.x / 2 ||
+                snake.cells[i].pos.x >
+                    screen_width - offset.x / 2 - cell_size ||
+                snake.cells[i].pos.y < offset.y / 2 ||
+                snake.cells[i].pos.y > screen_height - offset.x / 2 - cell_size)
+                game = OVER;
         }
 
         if (IsKeyPressed(KEY_RIGHT) && (snake.cells[0].speed.x == 0)) {
@@ -123,6 +121,13 @@ void update_game(void)
             snake.cells[snake.len].pos = snake_pos[snake.len - 1];
             snake.len += 1;
             apple.active = false;
+        }
+
+        for (size_t i = 1; i < snake.len; ++i) {
+            if (snake.cells[0].pos.x == snake.cells[i].pos.x &&
+                snake.cells[0].pos.y == snake.cells[i].pos.y) {
+                game = OVER;
+            }
         }
     }
     else if (game == PAUSED && IsKeyPressed(KEY_P)) {
