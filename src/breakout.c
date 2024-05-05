@@ -7,8 +7,8 @@ static const int player_width = 100;
 static const int player_height = 10;
 static const int ball_radius = 10;
 static const int ball_speed = 300;
-static const int rows = 10;
-static const int cols = 10;
+#define rows 10
+#define cols 10
 
 enum State { STANDBY, RUNNING, PAUSED, OVER };
 
