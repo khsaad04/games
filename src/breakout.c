@@ -76,16 +76,16 @@ void update_game(void)
         }
         break;
     case RUNNING:
-        // player movement
+        if (IsKeyPressed(KEY_P)) {
+            game = PAUSED;
+        }
+
+        // player control
         if (IsKeyDown(KEY_LEFT)) {
             if (player.speed.x > 0) {
                 player.speed.x *= -1;
             }
             player.pos.x += player.speed.x * GetFrameTime();
-        }
-
-        if (IsKeyPressed(KEY_P)) {
-            game = PAUSED;
         }
 
         if (IsKeyDown(KEY_RIGHT)) {
@@ -96,6 +96,7 @@ void update_game(void)
             player.pos.x += player.speed.x * GetFrameTime();
         }
 
+        // player-wall collision
         if (player.pos.x > screen_width - player_width) {
             player.pos.x = screen_width - player_width;
         }
