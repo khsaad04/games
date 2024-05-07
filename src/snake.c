@@ -1,7 +1,7 @@
 #include <assert.h>
 #include <raylib.h>
 #include <stdbool.h>
-#include <stdlib.h>
+#include <stdio.h>
 
 #define SNAKE_COLOR BLUE
 #define APPLE_COLOR RED
@@ -61,32 +61,11 @@ void init_game(void)
     apple.active = false;
 }
 
-void controls_update(void)
-{
-    if (IsKeyPressed(KEY_P) && game != OVER) {
-        game = PAUSED;
-    }
-    if (IsKeyPressed(KEY_RIGHT) && (snake.cells[0].speed.x == 0)) {
-        snake.cells[0].speed = (Vector2){cell_size, 0};
-    }
-    if (IsKeyPressed(KEY_LEFT) && (snake.cells[0].speed.x == 0)) {
-        snake.cells[0].speed = (Vector2){-cell_size, 0};
-    }
-    if (IsKeyPressed(KEY_UP) && (snake.cells[0].speed.y == 0)) {
-        snake.cells[0].speed = (Vector2){0, -cell_size};
-    }
-    if (IsKeyPressed(KEY_DOWN) && (snake.cells[0].speed.y == 0)) {
-        snake.cells[0].speed = (Vector2){0, cell_size};
-    }
-}
-
 void update_game(void)
 {
     switch (game) {
     case STANDBY:
-        if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_UP) ||
-            IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_RIGHT)) {
-            controls_update();
+        if (IsKeyPressed(KEY_SPACE)) {
             game = RUNNING;
         }
         break;
@@ -101,13 +80,28 @@ void update_game(void)
             snake.cells[i].pos = snake_pos[i - 1];
         }
 
-        if (snake.cells[0].pos.x < offset.x / 2 ||
-            snake.cells[0].pos.x + cell_size > screen_width - offset.x / 2 ||
-            snake.cells[0].pos.y < offset.y / 2 ||
-            snake.cells[0].pos.y + cell_size > screen_height - offset.x / 2)
+        if (snake.cells[0].pos.x < offset.x ||
+            snake.cells[0].pos.x > screen_width - offset.x - cell_size ||
+            snake.cells[0].pos.y < offset.y ||
+            snake.cells[0].pos.y > screen_height - offset.y - cell_size) {
             game = OVER;
+        }
 
-        controls_update();
+        if (IsKeyPressed(KEY_P)) {
+            game = PAUSED;
+        }
+        if (IsKeyPressed(KEY_RIGHT) && (snake.cells[0].speed.x == 0)) {
+            snake.cells[0].speed = (Vector2){cell_size, 0};
+        }
+        if (IsKeyPressed(KEY_LEFT) && (snake.cells[0].speed.x == 0)) {
+            snake.cells[0].speed = (Vector2){-cell_size, 0};
+        }
+        if (IsKeyPressed(KEY_UP) && (snake.cells[0].speed.y == 0)) {
+            snake.cells[0].speed = (Vector2){0, -cell_size};
+        }
+        if (IsKeyPressed(KEY_DOWN) && (snake.cells[0].speed.y == 0)) {
+            snake.cells[0].speed = (Vector2){0, cell_size};
+        }
 
         if (!apple.active) {
             apple.active = true;
@@ -155,8 +149,7 @@ void update_game(void)
         }
         break;
     case OVER:
-        if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_UP) ||
-            IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_RIGHT)) {
+        if (IsKeyPressed(KEY_SPACE)) {
             init_game();
             game = STANDBY;
         }
@@ -167,6 +160,7 @@ void update_game(void)
 void draw_game(void)
 {
     BeginDrawing();
+    // draw background
     ClearBackground(BG1);
     for (size_t i = 0; i < rows; ++i) {
         for (size_t j = 0; j < cols; ++j) {
@@ -193,13 +187,18 @@ void draw_game(void)
         (Vector2){screen_width - offset.x / 2, screen_height - offset.y / 2},
         BG2);
 
+    // draw snake
     for (size_t i = 0; i < snake.len; ++i) {
         DrawRectangleV(snake.cells[i].pos, (Vector2){cell_size, cell_size},
                        SNAKE_COLOR);
     }
-    if (apple.active)
-        DrawRectangleV(apple.pos, (Vector2){cell_size, cell_size}, APPLE_COLOR);
 
+    // draw apple
+    if (apple.active) {
+        DrawRectangleV(apple.pos, (Vector2){cell_size, cell_size}, APPLE_COLOR);
+    }
+
+    // draw score text
     DrawText(TextFormat("Score: %d", score), 20, screen_height - 25, 20,
              RAYWHITE);
     EndDrawing();
