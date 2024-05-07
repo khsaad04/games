@@ -1,5 +1,8 @@
 #include <raylib.h>
 
+#define rows 10
+#define cols 10
+
 static const int screen_width = 800;
 static const int screen_height = 600;
 static const int fps = 60;
@@ -7,8 +10,6 @@ static const int player_width = 100;
 static const int player_height = 10;
 static const int ball_radius = 10;
 static const int ball_speed = 300;
-#define rows 10
-#define cols 10
 
 enum State { STANDBY, RUNNING, PAUSED, OVER };
 
@@ -68,16 +69,23 @@ void init_game(void)
 
 void update_game(void)
 {
-    if (game == RUNNING) {
-        if (IsKeyPressed(KEY_P)) {
-            game = PAUSED;
+    switch (game) {
+    case STANDBY:
+        if (IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_RIGHT)) {
+            game = RUNNING;
         }
+        break;
+    case RUNNING:
         // player movement
         if (IsKeyDown(KEY_LEFT)) {
             if (player.speed.x > 0) {
                 player.speed.x *= -1;
             }
             player.pos.x += player.speed.x * GetFrameTime();
+        }
+
+        if (IsKeyPressed(KEY_P)) {
+            game = PAUSED;
         }
 
         if (IsKeyDown(KEY_RIGHT)) {
@@ -151,20 +159,18 @@ void update_game(void)
                 }
             }
         }
-    }
-    else if (game == PAUSED) {
+        break;
+    case PAUSED:
         if (IsKeyPressed(KEY_P)) {
             game = RUNNING;
         }
-    }
-
-    else if (IsKeyPressed(KEY_SPACE)) {
-        init_game();
-        game = STANDBY;
-    }
-
-    else if (game == STANDBY && (IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_RIGHT))) {
-        game = RUNNING;
+        break;
+    case OVER:
+        if (IsKeyPressed(KEY_SPACE)) {
+            init_game();
+            game = STANDBY;
+        }
+        break;
     }
 }
 
