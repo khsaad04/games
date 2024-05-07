@@ -59,7 +59,14 @@ void init_game(void)
 
 void update_game(void)
 {
-    if (game == RUNNING) {
+    switch (game) {
+    case STANDBY:
+        if (IsKeyPressed(KEY_SPACE)) {
+            bird_velocity = -10;
+            game = RUNNING;
+        }
+        break;
+    case RUNNING:
         bird.pos.y += bird_velocity;
         bird.radius.y -= bird_velocity * .0075;
         bird.radius.x += bird_velocity * .0075;
@@ -118,19 +125,18 @@ void update_game(void)
                 bird.color = RED;
             }
         }
-    }
-    else if (game == PAUSED && IsKeyPressed(KEY_P)) {
-        game = RUNNING;
-    }
-
-    else if (game == OVER && IsKeyPressed(KEY_SPACE)) {
-        init_game();
-        game = STANDBY;
-    }
-
-    else if (game != OVER && IsKeyPressed(KEY_SPACE)) {
-        bird_velocity = -10;
-        game = RUNNING;
+        break;
+    case PAUSED:
+        if (IsKeyPressed(KEY_P)) {
+            game = RUNNING;
+        }
+        break;
+    case OVER:
+        if (IsKeyPressed(KEY_SPACE)) {
+            init_game();
+            game = STANDBY;
+        }
+        break;
     }
 }
 
