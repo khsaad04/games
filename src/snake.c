@@ -80,6 +80,7 @@ void update_game(void)
             snake.cells[i].pos = snake_pos[i - 1];
         }
 
+        // snake-wall collision
         if (snake.cells[0].pos.x < offset.x ||
             snake.cells[0].pos.x > screen_width - offset.x - cell_size ||
             snake.cells[0].pos.y < offset.y ||
@@ -126,10 +127,14 @@ void update_game(void)
             }
         }
 
-        if ((snake.cells[0].pos.x < (apple.pos.x + cell_size) &&
-             (snake.cells[0].pos.x + cell_size) > apple.pos.x) &&
-            (snake.cells[0].pos.y < (apple.pos.y + cell_size) &&
-             (snake.cells[0].pos.y + cell_size) > apple.pos.y)) {
+        if (CheckCollisionRecs((Rectangle){.x = snake.cells[0].pos.x,
+                                           .y = snake.cells[0].pos.y,
+                                           .width = cell_size,
+                                           .height = cell_size},
+                               (Rectangle){.x = apple.pos.x,
+                                           .y = apple.pos.y,
+                                           .width = cell_size,
+                                           .height = cell_size})) {
             snake.cells[snake.len].pos = snake_pos[snake.len - 1];
             snake.len += 1;
             score += 1;
