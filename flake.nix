@@ -42,6 +42,7 @@
               default = breakout;
               breakout = buildPackage "breakout";
               flappy_bird = buildPackage "flappy_bird";
+              snake = buildPackage "snake";
             };
         };
     };

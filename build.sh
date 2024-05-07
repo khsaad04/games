@@ -6,6 +6,6 @@ if [ ! -d "build" ]; then
     mkdir build
 fi
 
-clang -O3 -Wall -Wextra -o build/breakout src/breakout.c -lraylib -ggdb
-clang -O3 -Wall -Wextra -o build/flappy_bird src/flappy_bird.c -lraylib -ggdb
-clang -O3 -Wall -Wextra -o build/snake src/snake.c -lraylib -ggdb
+clang -Wall -Wextra -o build/breakout src/breakout.c -lraylib -ggdb
+clang -Wall -Wextra -o build/flappy_bird src/flappy_bird.c -lraylib -ggdb
+clang -Wall -Wextra -o build/snake src/snake.c -lraylib -ggdb
