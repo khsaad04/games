@@ -61,6 +61,15 @@ void init_game(void)
     apple.active = false;
 }
 
+Vector2 get_random_apple_pos(void)
+{
+    return (Vector2){
+        GetRandomValue(0, (screen_width / cell_size) - 1) * cell_size +
+            offset.x / 2,
+        GetRandomValue(0, (screen_height / cell_size) - 1) * cell_size +
+            offset.y / 2};
+}
+
 void update_game(void)
 {
     switch (game) {
@@ -74,6 +83,7 @@ void update_game(void)
             snake_pos[i] = snake.cells[i].pos;
         }
 
+        // snake step
         snake.cells[0].pos.x += snake.cells[0].speed.x;
         snake.cells[0].pos.y += snake.cells[0].speed.y;
         for (size_t i = 1; i < snake_cap; ++i) {
@@ -81,13 +91,14 @@ void update_game(void)
         }
 
         // snake-wall collision
-        if (snake.cells[0].pos.x < offset.x ||
-            snake.cells[0].pos.x > screen_width - offset.x - cell_size ||
-            snake.cells[0].pos.y < offset.y ||
-            snake.cells[0].pos.y > screen_height - offset.y - cell_size) {
+        if (snake.cells[0].pos.x < offset.x / 2 ||
+            snake.cells[0].pos.x > screen_width - offset.x / 2 - cell_size ||
+            snake.cells[0].pos.y < offset.y / 2 ||
+            snake.cells[0].pos.y > screen_height - offset.y / 2 - cell_size) {
             game = OVER;
         }
 
+        // controls
         if (IsKeyPressed(KEY_P)) {
             game = PAUSED;
         }
@@ -104,29 +115,20 @@ void update_game(void)
             snake.cells[0].speed = (Vector2){0, cell_size};
         }
 
+        // spawn random apple
         if (!apple.active) {
             apple.active = true;
-            apple.pos = (Vector2){
-                GetRandomValue(0, (screen_width / cell_size) - 1) * cell_size +
-                    offset.x / 2,
-                GetRandomValue(0, (screen_height / cell_size) - 1) * cell_size +
-                    offset.y / 2};
-
+            apple.pos = get_random_apple_pos();
             for (size_t i = 0; i < snake.len; i++) {
                 while ((apple.pos.x == snake.cells[i].pos.x) &&
                        (apple.pos.y == snake.cells[i].pos.y)) {
-                    apple.pos = (Vector2){
-                        GetRandomValue(0, (screen_width / cell_size) - 1) *
-                                cell_size +
-                            offset.x / 2,
-                        GetRandomValue(0, (screen_height / cell_size) - 1) *
-                                cell_size +
-                            offset.y / 2};
+                    apple.pos = get_random_apple_pos();
                     i = 0;
                 }
             }
         }
 
+        // snake-apple collision
         if (CheckCollisionRecs((Rectangle){.x = snake.cells[0].pos.x,
                                            .y = snake.cells[0].pos.y,
                                            .width = cell_size,
@@ -141,6 +143,7 @@ void update_game(void)
             apple.active = false;
         }
 
+        // snake-snake collision
         for (size_t i = 1; i < snake.len; ++i) {
             if (snake.cells[0].pos.x == snake.cells[i].pos.x &&
                 snake.cells[0].pos.y == snake.cells[i].pos.y) {
