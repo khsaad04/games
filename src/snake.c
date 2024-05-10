@@ -204,9 +204,32 @@ void draw_game(void)
         DrawRectangleV(apple.pos, (Vector2){cell_size, cell_size}, APPLE_COLOR);
     }
 
+    // Game intro
+    if (game == STANDBY) {
+        DrawText(TextFormat("Press <Space> to start"),
+                 screen_width / 2 -
+                     MeasureText("Press <Space> to start", 20) / 2,
+                 screen_height / 3 * 2 - 20 / 2, 20, GRAY);
+    }
+
     // draw score text
     DrawText(TextFormat("Score: %d", score), 20, screen_height - 25, 20,
              RAYWHITE);
+
+    // game over texts
+    if (game == OVER) {
+        DrawText(TextFormat("GAME OVER"),
+                 screen_width / 2 - MeasureText("GAME OVER", 30) / 2,
+                 screen_height * .35, 30, RAYWHITE);
+        DrawText(TextFormat("Score: %d", score),
+                 screen_width / 2 -
+                     MeasureText(TextFormat("Score: %d", score), 30) / 2,
+                 screen_height * .45, 30, RAYWHITE);
+        DrawText(TextFormat("Press <space> to restart"),
+                 screen_width / 2 -
+                     MeasureText("Press <space> to restart", 30) / 2,
+                 screen_height * .55, 30, RAYWHITE);
+    }
     EndDrawing();
 }
 
