@@ -14,37 +14,31 @@ static const int ball_speed = 300;
 typedef enum State { STANDBY, RUNNING, PAUSED, OVER } State;
 
 typedef struct Player {
-    Vector2 pos;
-    Vector2 size;
-    Vector2 speed;
+    Vector2 pos, size, speed;
 } Player;
 
 typedef struct ball {
-    Vector2 pos;
-    Vector2 speed;
+    Vector2 pos, speed;
 } Ball;
 
 typedef struct Bricks {
-    Vector2 pos;
-    Vector2 size;
+    Vector2 pos, size;
     bool alive;
 } Bricks;
 
 static State game;
-static int score = 0;
-static Player player = {0};
-static Ball ball = {0};
-static Bricks bricks[rows][cols] = {0};
-
-static int enemy_width =
-    (screen_width - ball_radius * 6 - 5 * (cols - 1)) / cols;
-static int enemy_height =
-    (screen_height * 0.5 - ball_radius * 3 - 5 * (rows - 1)) / rows;
+static int score;
+static Player player;
+static Ball ball;
+static Bricks bricks[rows][cols];
+static int enemy_width;
+static int enemy_height;
 
 void init_game(void)
 {
     score = 0;
     game = STANDBY;
+
     ball.pos =
         (Vector2){screen_width / 2.0, screen_height - screen_height * 0.1 -
                                           ball_radius - player_height};
@@ -54,6 +48,10 @@ void init_game(void)
                            screen_height - screen_height * 0.1};
     player.size = (Vector2){player_width, player_height};
     player.speed = (Vector2){ball_speed * 2, 0};
+
+    enemy_width = (screen_width - ball_radius * 6 - 5 * (cols - 1)) / cols;
+    enemy_height =
+        (screen_height * 0.5 - ball_radius * 3 - 5 * (rows - 1)) / rows;
 
     for (int i = 0; i < rows; ++i) {
         for (int j = 0; j < cols; ++j) {
