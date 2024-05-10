@@ -11,7 +11,7 @@ static const int player_height = 10;
 static const int ball_radius = 10;
 static const int ball_speed = 300;
 
-enum State { STANDBY, RUNNING, PAUSED, OVER };
+typedef enum State { STANDBY, RUNNING, PAUSED, OVER } State;
 
 typedef struct Player {
     Vector2 pos;
@@ -21,7 +21,6 @@ typedef struct Player {
 
 typedef struct ball {
     Vector2 pos;
-    float radius;
     Vector2 speed;
 } Ball;
 
@@ -31,7 +30,7 @@ typedef struct Bricks {
     bool alive;
 } Bricks;
 
-static enum State game;
+static State game;
 static int score = 0;
 static Player player = {0};
 static Ball ball = {0};
@@ -193,7 +192,8 @@ void draw_game(void)
     switch (game) {
     case STANDBY:
         DrawText(TextFormat("Press <- or -> to start"),
-                 screen_width / 2 - MeasureText("Press Enter to start", 20) / 2,
+                 screen_width / 2 -
+                     MeasureText("Press <- or -> to start", 20) / 2,
                  screen_height * .75, 20, RAYWHITE);
         break;
     case RUNNING:
@@ -213,12 +213,10 @@ void draw_game(void)
                  screen_width / 2 -
                      MeasureText(TextFormat("Score: %d", score), 30) / 2,
                  screen_height * .65, 30, RAYWHITE);
-        DrawText(
-            TextFormat("Press <space> to restart", score),
-            screen_width / 2 -
-                MeasureText(TextFormat("Press <space> to restart", score), 30) /
-                    2,
-            screen_height * .75, 30, RAYWHITE);
+        DrawText(TextFormat("Press <space> to restart"),
+                 screen_width / 2 -
+                     MeasureText("Press <space> to restart", 30) / 2,
+                 screen_height * .75, 30, RAYWHITE);
         break;
     }
 
