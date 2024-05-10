@@ -10,7 +10,7 @@ static const int pillar_gap = 10 * bird_radius;
 static const int pillar_padding = (screen_width - 2 * pillar_width) / 2;
 static const int fps = 60;
 
-enum State { STANDBY, RUNNING, PAUSED, OVER };
+typedef enum State { STANDBY, RUNNING, PAUSED, OVER } State;
 
 typedef struct {
     Vector2 pos, radius;
@@ -22,9 +22,9 @@ typedef struct {
     bool passed;
 } Pillar;
 
-static enum State game;
-static Bird bird = {0};
-static Pillar pillars[3] = {0};
+static State game;
+static Bird bird;
+static Pillar pillars[3];
 static int score;
 static float bird_velocity;
 static float gravity;
@@ -41,15 +41,15 @@ void init_game(void)
 {
     game = STANDBY;
     score = 0;
-    bird_velocity = 0;
-    gravity = 30;
-    pillar_velocity = 200;
-    pillar_accel = 1;
 
+    gravity = 30;
+    bird_velocity = 0;
     bird.pos = (Vector2){screen_width / 3.0, screen_height / 3.0};
     bird.radius = (Vector2){bird_radius, bird_radius};
     bird.color = RAYWHITE;
 
+    pillar_accel = 1;
+    pillar_velocity = 200;
     for (int i = 0; i < 3; ++i) {
         pillars[i].pos =
             (Vector2){screen_width + i * pillar_padding, random_piller_y()};
@@ -71,6 +71,7 @@ void update_game(void)
         bird.radius.y -= bird_velocity * .0075;
         bird.radius.x += bird_velocity * .0075;
         bird_velocity += gravity * GetFrameTime();
+
         pillar_velocity += pillar_accel * GetFrameTime();
 
         if (IsKeyPressed(KEY_SPACE)) {
