@@ -21,11 +21,10 @@ static const int rows = (screen_height - offset.y) / cell_size;
 static const int cols = (screen_width - offset.x) / cell_size;
 static const int snake_cap = rows * cols;
 
-enum State { STANDBY, RUNNING, PAUSED, OVER };
+typedef enum State { STANDBY, RUNNING, PAUSED, OVER } State;
 
 typedef struct {
-    Vector2 pos;
-    Vector2 speed;
+    Vector2 pos, speed;
 } SnakeCell;
 
 typedef struct {
@@ -38,7 +37,7 @@ typedef struct {
     size_t len;
 } Snake;
 
-static enum State game;
+static State game;
 static int score;
 static Snake snake;
 static Vector2 snake_pos[snake_cap];
@@ -57,7 +56,6 @@ void init_game(void)
                       offset.y / 2 + (rows / 2.0) * cell_size};
         snake.cells[i].speed = (Vector2){cell_size, 0};
     }
-
     apple.active = false;
 }
 

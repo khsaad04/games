@@ -16,6 +16,7 @@
               pkgs.clang
               pkgs.gdb
               pkgs.raylib
+              pkgs.pkg-config
             ];
           };
           packages =
@@ -32,7 +33,7 @@
                   ];
                   buildPhase = ''
                     mkdir -p $out/bin
-                    clang -O3 -Wall -Wextra -o ${name} ./src/${name}.c -lraylib
+                    clang -O3 -o ${name} ./src/${name}.c -lraylib
                     chmod +x ${name}
                     cp ${name} $out/bin
                   '';
