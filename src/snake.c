@@ -3,18 +3,23 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-#define SNAKE_COLOR BLUE
-#define APPLE_COLOR RED
-#define BG1                                                                    \
-    (Color) { 20, 20, 20, 255 }
-#define BG2                                                                    \
-    (Color) { 10, 10, 10, 255 }
+// #define SNAKE_COLOR BLUE
+// #define APPLE_COLOR RED
+// #define BG1 \
+//     (Color) { 20, 20, 20, 255 }
+// #define BG2 \
+//     (Color) { 10, 10, 10, 255 }
+
+#define SNAKE_COLOR RAYWHITE
+#define APPLE_COLOR RAYWHITE
+#define BG1 BLACK
+#define BG2 BLACK
 
 static const int screen_width = 800;
 static const int screen_height = 600;
 static const int fps = 12;
 static const int cell_size =
-    33; // Must be such value that rows and cols are even numbered
+    23; // Must be such value that rows and cols are even numbered
 static const Vector2 offset =
     (Vector2){screen_width % cell_size, screen_height % cell_size};
 static const int rows = (screen_height - offset.y) / cell_size;
@@ -201,7 +206,9 @@ void draw_game(void)
 
     // draw apple
     if (apple.active) {
-        DrawRectangleV(apple.pos, (Vector2){cell_size, cell_size}, APPLE_COLOR);
+        DrawCircleV((Vector2){apple.pos.x + cell_size / 2.0,
+                              apple.pos.y + cell_size / 2.0},
+                    cell_size * .4, APPLE_COLOR);
     }
 
     // Game intro
