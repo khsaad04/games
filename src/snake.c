@@ -19,7 +19,7 @@ static const int screen_width = 800;
 static const int screen_height = 600;
 static const int fps = 12;
 static const int cell_size =
-    23; // Must be such value that rows and cols are even numbered
+    20; // Must be such value that rows and cols are even numbered
 static const Vector2 offset =
     (Vector2){screen_width % cell_size, screen_height % cell_size};
 static const int rows = (screen_height - offset.y) / cell_size;
@@ -183,20 +183,20 @@ void draw_game(void)
         }
     }
     DrawLineV((Vector2){offset.x / 2, offset.y / 2},
-              (Vector2){screen_width - offset.x / 2, offset.y / 2}, BG2);
+              (Vector2){screen_width - offset.x / 2, offset.y / 2}, GRAY);
 
     DrawLineV(
         (Vector2){offset.x / 2, screen_height - offset.y / 2},
         (Vector2){screen_width - offset.x / 2, screen_height - offset.y / 2},
-        BG2);
+        GRAY);
 
     DrawLineV((Vector2){offset.x / 2, offset.y / 2},
-              (Vector2){offset.x / 2, screen_height - offset.y / 2}, BG2);
+              (Vector2){offset.x / 2, screen_height - offset.y / 2}, GRAY);
 
     DrawLineV(
         (Vector2){screen_width - offset.x / 2, offset.y / 2},
         (Vector2){screen_width - offset.x / 2, screen_height - offset.y / 2},
-        BG2);
+        GRAY);
 
     // draw snake
     for (size_t i = 0; i < snake.len; ++i) {
