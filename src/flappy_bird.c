@@ -152,16 +152,16 @@ void draw_game(void)
     if (game == STANDBY) {
         DrawText(TextFormat("Press <Space> to start"),
                  SCREEN_WIDTH / 2 -
-                     MeasureText("Press <Space> to start", 20) / 2,
-                 SCREEN_HEIGHT / 2 - 20 / 2, 20, GRAY);
+                     MeasureText("Press <Space> to start", 20) / 2.0,
+                 SCREEN_HEIGHT / 2 - 20 / 2.0, 20, GRAY);
     }
 
     // Score
     if (score > 0) {
         DrawText(TextFormat("%d", score),
                  SCREEN_WIDTH / 2 -
-                     MeasureText(TextFormat("%d", score), 100) / 2,
-                 SCREEN_HEIGHT / 2 - 100 / 2, 100, GRAY);
+                     MeasureText(TextFormat("%d", score), 100) / 2.0,
+                 SCREEN_HEIGHT / 2 - 100 / 2.0, 100, GRAY);
     }
 
     // Bird
