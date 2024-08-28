@@ -1,14 +1,15 @@
 #include <raylib.h>
 
-#define SCREEN_WIDTH 800
-#define SCREEN_HEIGHT 600
+#define SCALE 1
+#define SCREEN_WIDTH (800 * SCALE)
+#define SCREEN_HEIGHT (600 * SCALE)
 #define FPS 60
 #define ROWS 10
 #define COLS 10
-#define PLAYER_WIDTH 100
-#define PLAYER_HEIGHT 10
-#define BALL_RADIUS 10
-#define BALL_SPEED 300
+#define PLAYER_WIDTH (100 * SCALE)
+#define PLAYER_HEIGHT (10 * SCALE)
+#define BALL_RADIUS (10 * SCALE)
+#define BALL_SPEED (300 * SCALE)
 
 typedef enum State { STANDBY, RUNNING, PAUSED, OVER } State;
 

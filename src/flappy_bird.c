@@ -2,10 +2,11 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#define SCREEN_WIDTH 800
-#define SCREEN_HEIGHT 600
+#define SCALE 1.2
+#define SCREEN_WIDTH (800 * SCALE)
+#define SCREEN_HEIGHT (600 * SCALE)
 #define fps 60
-#define BIRD_RADIUS 20
+#define BIRD_RADIUS (20 * SCALE)
 
 static const int pillar_width = 5 * BIRD_RADIUS;
 static const int pillar_gap = 10 * BIRD_RADIUS;
@@ -43,14 +44,14 @@ void init_game(void)
     game = STANDBY;
     score = 0;
 
-    gravity = 30;
+    gravity = 30 * SCALE;
     bird_velocity = 0;
     bird.pos = (Vector2){SCREEN_WIDTH / 3.0, SCREEN_HEIGHT / 3.0};
     bird.radius = (Vector2){BIRD_RADIUS, BIRD_RADIUS};
     bird.color = RAYWHITE;
 
     pillar_accel = 1;
-    pillar_velocity = 200;
+    pillar_velocity = 200 * SCALE;
     for (int i = 0; i < 3; ++i) {
         pillars[i].pos =
             (Vector2){SCREEN_WIDTH + i * pillar_padding, random_piller_y()};
