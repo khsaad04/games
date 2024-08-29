@@ -1,12 +1,12 @@
 #include <raylib.h>
-#include <stdbool.h>
 #include <stdlib.h>
 
-#define SCALE 1.2
+#define SCALE 1
 #define SCREEN_WIDTH (800 * SCALE)
 #define SCREEN_HEIGHT (600 * SCALE)
 #define fps 60
 #define BIRD_RADIUS (20 * SCALE)
+#define GRAVITY (30 * SCALE)
 
 static const int pillar_width = 5 * BIRD_RADIUS;
 static const int pillar_gap = 10 * BIRD_RADIUS;
@@ -28,7 +28,6 @@ static State game;
 static int score;
 static Bird bird;
 static float bird_velocity;
-static float gravity;
 static Pillar pillars[3];
 static float pillar_velocity;
 static float pillar_accel;
@@ -44,7 +43,6 @@ void init_game(void)
     game = STANDBY;
     score = 0;
 
-    gravity = 30 * SCALE;
     bird_velocity = 0;
     bird.pos = (Vector2){SCREEN_WIDTH / 3.0, SCREEN_HEIGHT / 3.0};
     bird.radius = (Vector2){BIRD_RADIUS, BIRD_RADIUS};
@@ -72,7 +70,7 @@ void update_game(void)
         bird.pos.y += bird_velocity;
         bird.radius.y -= bird_velocity * .0075;
         bird.radius.x += bird_velocity * .0075;
-        bird_velocity += gravity * GetFrameTime();
+        bird_velocity += GRAVITY * GetFrameTime();
 
         pillar_velocity += pillar_accel * GetFrameTime();
 
@@ -151,17 +149,17 @@ void draw_game(void)
     // Game intro
     if (game == STANDBY) {
         DrawText(TextFormat("Press <Space> to start"),
-                 SCREEN_WIDTH / 2 -
+                 SCREEN_WIDTH / 2.0 -
                      MeasureText("Press <Space> to start", 20) / 2.0,
-                 SCREEN_HEIGHT / 2 - 20 / 2.0, 20, GRAY);
+                 SCREEN_HEIGHT / 2.0 - 20 / 2.0, 20, GRAY);
     }
 
     // Score
     if (score > 0) {
         DrawText(TextFormat("%d", score),
-                 SCREEN_WIDTH / 2 -
+                 SCREEN_WIDTH / 2.0 -
                      MeasureText(TextFormat("%d", score), 100) / 2.0,
-                 SCREEN_HEIGHT / 2 - 100 / 2.0, 100, GRAY);
+                 SCREEN_HEIGHT / 2.0 - 100 / 2.0, 100, GRAY);
     }
 
     // Bird

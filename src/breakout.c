@@ -167,7 +167,6 @@ void update_game(void)
     case OVER:
         if (IsKeyPressed(KEY_SPACE)) {
             init_game();
-            game = STANDBY;
         }
         break;
     }
