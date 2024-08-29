@@ -1,9 +1,6 @@
-#include <assert.h>
 #include <raylib.h>
-#include <stdbool.h>
-#include <stdio.h>
 
-// #define CHECKERBOARD
+/*#define CHECKERBOARD*/
 
 #ifdef CHECKERBOARD
 
@@ -23,12 +20,13 @@
 
 #endif
 
-#define SCREEN_WIDTH 800
-#define SCREEN_HEIGHT 600
+#define SCALE 1
+#define SCREEN_WIDTH ((int)(800 * SCALE))
+#define SCREEN_HEIGHT ((int)(600 * SCALE))
 #define FPS 12
-#define CELL_SIZE 20
-#define ROWS (SCREEN_HEIGHT / CELL_SIZE) // must be even
-#define COLS (SCREEN_WIDTH / CELL_SIZE)  // must be even
+#define CELL_SIZE (int)(20 * SCALE)
+#define ROWS ((int)(SCREEN_HEIGHT / CELL_SIZE))
+#define COLS ((int)(SCREEN_WIDTH / CELL_SIZE))
 #define SNAKE_CAP (ROWS * COLS)
 
 static const Vector2 offset = (Vector2){SCREEN_WIDTH % (CELL_SIZE * COLS),
@@ -42,7 +40,7 @@ typedef struct {
 
 typedef struct {
     SnakeCell cells[SNAKE_CAP];
-    size_t len;
+    int len;
 } Snake;
 
 typedef struct {
@@ -62,9 +60,7 @@ void init_game(void)
     game = STANDBY;
     score = 0;
     snake.len = 1;
-    assert(ROWS % 2 == 0);
-    assert(COLS % 2 == 0);
-    for (size_t i = 0; i < SNAKE_CAP; ++i) {
+    for (int i = 0; i < SNAKE_CAP; ++i) {
         snake.cells[i].pos = (Vector2){
             offset.x / 2 + ((SCREEN_WIDTH / 20.0) / 2 - 3) * CELL_SIZE,
             offset.y / 2 + ((SCREEN_HEIGHT / 20.0) / 2) * CELL_SIZE};
@@ -93,14 +89,14 @@ void update_game(void)
         }
         break;
     case RUNNING:
-        for (size_t i = 0; i < snake.len; ++i) {
+        for (int i = 0; i < snake.len; ++i) {
             snake_pos[i] = snake.cells[i].pos;
         }
 
         // snake step
         snake.cells[0].pos.x += snake.cells[0].speed.x;
         snake.cells[0].pos.y += snake.cells[0].speed.y;
-        for (size_t i = 1; i < SNAKE_CAP; ++i) {
+        for (int i = 1; i < SNAKE_CAP; ++i) {
             snake.cells[i].pos = snake_pos[i - 1];
         }
 
@@ -133,7 +129,7 @@ void update_game(void)
         if (!apple.active) {
             apple.active = true;
             apple.pos = get_random_apple_pos();
-            for (size_t i = 0; i < snake.len; i++) {
+            for (int i = 0; i < snake.len; i++) {
                 while ((apple.pos.x == snake.cells[i].pos.x) &&
                        (apple.pos.y == snake.cells[i].pos.y)) {
                     apple.pos = get_random_apple_pos();
@@ -158,7 +154,7 @@ void update_game(void)
         }
 
         // snake-snake collision
-        for (size_t i = 1; i < snake.len; ++i) {
+        for (int i = 1; i < snake.len; ++i) {
             if (snake.cells[0].pos.x == snake.cells[i].pos.x &&
                 snake.cells[0].pos.y == snake.cells[i].pos.y) {
                 game = OVER;
@@ -185,8 +181,8 @@ void draw_game(void)
     // draw background
     ClearBackground(BG1);
 #ifdef CHECKERBOARD
-    for (size_t i = 0; i < ROWS; ++i) {
-        for (size_t j = 0; j < COLS; ++j) {
+    for (int i = 0; i < ROWS; ++i) {
+        for (int j = 0; j < COLS; ++j) {
             if ((i + j) % 2 == 0) {
                 DrawRectangleV((Vector2){offset.x / 2 + j * CELL_SIZE,
                                          offset.y / 2 + i * CELL_SIZE},
@@ -199,7 +195,7 @@ void draw_game(void)
                        SCREEN_HEIGHT - offset.y, GRAY);
 
     // draw snake
-    for (size_t i = 0; i < snake.len; ++i) {
+    for (int i = 0; i < snake.len; ++i) {
         DrawRectangleV(snake.cells[i].pos, snake.cells[i].size, SNAKE_COLOR);
     }
 
@@ -219,7 +215,7 @@ void draw_game(void)
     }
 
     // draw score text
-    DrawText(TextFormat("Score: %d", score), 20, SCREEN_HEIGHT - 25, 20,
+    DrawText(TextFormat("Score: %d", score), 20, SCREEN_HEIGHT + 5, 20,
              RAYWHITE);
 
     // draw game over texts
