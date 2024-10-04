@@ -1,15 +1,18 @@
 #include <raylib.h>
 
-#define SCALE 1
-#define SCREEN_WIDTH (800 * SCALE)
-#define SCREEN_HEIGHT (600 * SCALE)
-#define FPS 60
-#define ROWS 10
-#define COLS 10
-#define PLAYER_WIDTH (100 * SCALE)
-#define PLAYER_HEIGHT (10 * SCALE)
-#define BALL_RADIUS (10 * SCALE)
-#define BALL_SPEED (300 * SCALE)
+static const int scale = 1;
+static const int screen_width = (800 * scale);
+static const int screen_height = (600 * scale);
+static const int fps = 60;
+/*static const int rows = 10;*/
+/*static const int cols = 10;*/
+static const int player_width = (100 * scale);
+static const int player_height = (10 * scale);
+static const int ball_radius = (10 * scale);
+static const int ball_speed = (300 * scale);
+
+enum { rows = 10 }; // NOTE: Did this to fix folding-constant-array warning
+enum { cols = 10 }; // NOTE: Did this to fix folding-constant-array warning
 
 typedef enum State { STANDBY, RUNNING, PAUSED, OVER } State;
 
@@ -31,7 +34,7 @@ static State game;
 static int score;
 static Player player;
 static Ball ball;
-static Bricks bricks[ROWS][COLS];
+static Bricks bricks[rows][cols];
 static int enemy_width;
 static int enemy_height;
 
@@ -43,19 +46,19 @@ void init_game(void)
     int w = GetScreenWidth();
     int h = GetScreenHeight();
 
-    ball.pos = (Vector2){w / 2.0, h - h * 0.1 - BALL_RADIUS - PLAYER_HEIGHT};
-    ball.radius = BALL_RADIUS;
-    ball.speed = (Vector2){BALL_SPEED, BALL_SPEED};
+    ball.pos = (Vector2){w / 2.0, h - h * 0.1 - ball_radius - player_height};
+    ball.radius = ball_radius;
+    ball.speed = (Vector2){ball_speed, ball_speed};
 
-    player.pos = (Vector2){w / 2.0 - PLAYER_WIDTH / 2.0, h - h * 0.1};
-    player.size = (Vector2){PLAYER_WIDTH, PLAYER_HEIGHT};
-    player.speed = (Vector2){BALL_SPEED * 2, 0};
+    player.pos = (Vector2){w / 2.0 - player_width / 2.0, h - h * 0.1};
+    player.size = (Vector2){player_width, player_height};
+    player.speed = (Vector2){ball_speed * 2, 0};
 
-    enemy_width = (w - ball.radius * 6 - 5 * (COLS - 1)) / COLS;
-    enemy_height = (h * 0.5 - ball.radius * 3 - 5 * (ROWS - 1)) / ROWS;
+    enemy_width = (w - ball.radius * 6 - 5 * (cols - 1)) / cols;
+    enemy_height = (h * 0.5 - ball.radius * 3 - 5 * (rows - 1)) / rows;
 
-    for (int i = 0; i < ROWS; ++i) {
-        for (int j = 0; j < COLS; ++j) {
+    for (int i = 0; i < rows; ++i) {
+        for (int j = 0; j < cols; ++j) {
             bricks[i][j].pos =
                 (Vector2){ball.radius * 3 + j * enemy_width + j * 5,
                           ball.radius * 3 + i * enemy_height + i * 5};
@@ -95,8 +98,8 @@ void update_game(void)
         }
 
         // player-wall collision
-        if (player.pos.x > SCREEN_WIDTH - PLAYER_WIDTH) {
-            player.pos.x = SCREEN_WIDTH - PLAYER_WIDTH;
+        if (player.pos.x > screen_width - player_width) {
+            player.pos.x = screen_width - player_width;
         }
 
         if (player.pos.x < 0) {
@@ -108,7 +111,7 @@ void update_game(void)
         ball.pos.y += ball.speed.y * GetFrameTime();
 
         // ball-wall collision
-        if (ball.pos.x > SCREEN_WIDTH || ball.pos.x < 0) {
+        if (ball.pos.x > screen_width || ball.pos.x < 0) {
             ball.speed.x *= -1;
         }
 
@@ -116,7 +119,7 @@ void update_game(void)
             ball.speed.y *= -1;
         }
 
-        if (ball.pos.y > SCREEN_HEIGHT + ball.radius) {
+        if (ball.pos.y > screen_height + ball.radius) {
             game = OVER;
         }
 
@@ -140,8 +143,8 @@ void update_game(void)
         }
 
         // ball-brick collision
-        for (int i = 0; i < ROWS; ++i) {
-            for (int j = 0; j < COLS; ++j) {
+        for (int i = 0; i < rows; ++i) {
+            for (int j = 0; j < cols; ++j) {
                 Rectangle enemy = {
                     .x = bricks[i][j].pos.x,
                     .y = bricks[i][j].pos.y,
@@ -177,8 +180,8 @@ void draw_game(void)
     BeginDrawing();
 
     ClearBackground(BLACK);
-    for (int i = 0; i < ROWS; ++i) {
-        for (int j = 0; j < COLS; ++j) {
+    for (int i = 0; i < rows; ++i) {
+        for (int j = 0; j < cols; ++j) {
             if (bricks[i][j].alive == true) {
                 DrawRectangleV(bricks[i][j].pos, bricks[i][j].size, RAYWHITE);
             }
@@ -221,8 +224,8 @@ void draw_game(void)
 
 int main(void)
 {
-    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Breakout");
-    SetTargetFPS(FPS);
+    InitWindow(screen_width, screen_height, "Breakout");
+    SetTargetFPS(fps);
 
     init_game();
 

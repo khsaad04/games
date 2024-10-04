@@ -1,16 +1,16 @@
 #include <raylib.h>
 #include <stdlib.h>
 
-#define SCALE 1
-#define SCREEN_WIDTH (800 * SCALE)
-#define SCREEN_HEIGHT (600 * SCALE)
-#define fps 60
-#define BIRD_RADIUS (20 * SCALE)
-#define GRAVITY (30 * SCALE)
+static const int scale = 1;
+static const int screen_width = (800 * scale);
+static const int screen_height = (600 * scale);
+static const int fps = 60;
+static const int bird_radius = (20 * scale);
+static const int gravity = (30 * scale);
 
-static const int pillar_width = 5 * BIRD_RADIUS;
-static const int pillar_gap = 10 * BIRD_RADIUS;
-static const int pillar_padding = (SCREEN_WIDTH - 2 * pillar_width) / 2;
+static const int pillar_width = 5 * bird_radius;
+static const int pillar_gap = 10 * bird_radius;
+static const int pillar_padding = (screen_width - 2 * pillar_width) / 2;
 
 typedef enum State { STANDBY, RUNNING, PAUSED, OVER } State;
 
@@ -34,7 +34,7 @@ static float pillar_accel;
 
 float random_piller_y(void)
 {
-    return (float)rand() / (float)RAND_MAX * (SCREEN_HEIGHT * 2.0 / 3.0 - 50) +
+    return (float)rand() / (float)RAND_MAX * (screen_height * 2.0 / 3.0 - 50) +
            50;
 }
 
@@ -44,15 +44,15 @@ void init_game(void)
     score = 0;
 
     bird_velocity = 0;
-    bird.pos = (Vector2){SCREEN_WIDTH / 3.0, SCREEN_HEIGHT / 3.0};
-    bird.radius = (Vector2){BIRD_RADIUS, BIRD_RADIUS};
+    bird.pos = (Vector2){screen_width / 3.0, screen_height / 3.0};
+    bird.radius = (Vector2){bird_radius, bird_radius};
     bird.color = RAYWHITE;
 
     pillar_accel = 1;
-    pillar_velocity = 200 * SCALE;
+    pillar_velocity = 200 * scale;
     for (int i = 0; i < 3; ++i) {
         pillars[i].pos =
-            (Vector2){SCREEN_WIDTH + i * pillar_padding, random_piller_y()};
+            (Vector2){screen_width + i * pillar_padding, random_piller_y()};
         pillars[i].passed = false;
     }
 }
@@ -70,7 +70,7 @@ void update_game(void)
         bird.pos.y += bird_velocity;
         bird.radius.y -= bird_velocity * .0075;
         bird.radius.x += bird_velocity * .0075;
-        bird_velocity += GRAVITY * GetFrameTime();
+        bird_velocity += gravity * GetFrameTime();
 
         pillar_velocity += pillar_accel * GetFrameTime();
 
@@ -82,8 +82,8 @@ void update_game(void)
             game = PAUSED;
         }
 
-        if (bird.pos.y < 0 - BIRD_RADIUS ||
-            bird.pos.y > SCREEN_HEIGHT + BIRD_RADIUS) {
+        if (bird.pos.y < 0 - bird_radius ||
+            bird.pos.y > screen_height + bird_radius) {
             game = OVER;
             bird.color = RED;
         }
@@ -92,7 +92,7 @@ void update_game(void)
             pillars[i].pos.x -= pillar_velocity * GetFrameTime();
 
             if (pillars[i].pos.x < -pillar_width) {
-                pillars[i].pos.x = SCREEN_WIDTH;
+                pillars[i].pos.x = screen_width;
                 pillars[i].pos.y = random_piller_y();
                 pillars[i].passed = false;
             }
@@ -115,12 +115,12 @@ void update_game(void)
                 .x = pillars[i].pos.x,
                 .y = pillars[i].pos.y + pillar_gap,
                 .width = pillar_width,
-                .height = SCREEN_HEIGHT,
+                .height = screen_height,
             };
 
-            if (CheckCollisionCircleRec(bird.pos, BIRD_RADIUS,
+            if (CheckCollisionCircleRec(bird.pos, bird_radius,
                                         pillar_top_rect) ||
-                CheckCollisionCircleRec(bird.pos, BIRD_RADIUS,
+                CheckCollisionCircleRec(bird.pos, bird_radius,
                                         pillar_bottom_rect)) {
                 game = OVER;
                 bird.color = RED;
@@ -149,17 +149,17 @@ void draw_game(void)
     // Game intro
     if (game == STANDBY) {
         DrawText(TextFormat("Press <Space> to start"),
-                 SCREEN_WIDTH / 2.0 -
+                 screen_width / 2.0 -
                      MeasureText("Press <Space> to start", 20) / 2.0,
-                 SCREEN_HEIGHT / 2.0 - 20 / 2.0, 20, GRAY);
+                 screen_height / 2.0 - 20 / 2.0, 20, GRAY);
     }
 
     // Score
     if (score > 0) {
         DrawText(TextFormat("%d", score),
-                 SCREEN_WIDTH / 2.0 -
+                 screen_width / 2.0 -
                      MeasureText(TextFormat("%d", score), 100) / 2.0,
-                 SCREEN_HEIGHT / 2.0 - 100 / 2.0, 100, GRAY);
+                 screen_height / 2.0 - 100 / 2.0, 100, GRAY);
     }
 
     // Bird
@@ -171,7 +171,7 @@ void draw_game(void)
         DrawRectangle(pillars[i].pos.x, 0, pillar_width, pillars[i].pos.y,
                       RAYWHITE);
         DrawRectangle(pillars[i].pos.x, pillars[i].pos.y + pillar_gap,
-                      pillar_width, SCREEN_HEIGHT, RAYWHITE);
+                      pillar_width, screen_height, RAYWHITE);
     }
 
     EndDrawing();
@@ -179,7 +179,7 @@ void draw_game(void)
 
 int main(void)
 {
-    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Flappy Bird");
+    InitWindow(screen_width, screen_height, "Flappy Bird");
     SetTargetFPS(fps);
 
     init_game();
