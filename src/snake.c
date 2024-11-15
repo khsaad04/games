@@ -20,29 +20,28 @@
 
 #endif
 
-static const int scale = 1;
-static const int screen_width = ((int)(800 * scale));
-static const int screen_height = ((int)(600 * scale));
-static const int fps = 12;
-static const int cell_size = (int)(20 * scale);
-static const int rows = ((int)(screen_height / cell_size));
-static const int cols = ((int)(screen_width / cell_size));
-/*static const int snake_cap = (rows * cols);*/
-static const Vector2 offset = (Vector2){screen_width % (cell_size * cols),
-                                        screen_height % (cell_size * rows)};
-
-enum {
-    snake_cap = (rows * cols)
-}; // NOTE: Did this to fix folding-constant-array warning
+#define SCALE 1
+#define SCREEN_WIDTH ((int)(800 * SCALE))
+#define SCREEN_HEIGHT ((int)(600 * SCALE))
+#define FPS 12
+#define CELL_SIZE (int)(20 * SCALE)
+#define ROWS ((int)(SCREEN_HEIGHT / CELL_SIZE))
+#define COLS ((int)(SCREEN_WIDTH / CELL_SIZE))
+#define SNAKE_CAP (ROWS * COLS)
+#define offset                                                                 \
+    (Vector2)                                                                  \
+    {                                                                          \
+        SCREEN_WIDTH % (CELL_SIZE * COLS), SCREEN_HEIGHT % (CELL_SIZE * ROWS)  \
+    }
 
 typedef enum State { STANDBY, RUNNING, PAUSED, OVER } State;
 
 typedef struct {
-    Vector2 pos, size, speed;
+    Vector2 pos, speed;
 } SnakeCell;
 
 typedef struct {
-    SnakeCell cells[snake_cap];
+    SnakeCell cells[SNAKE_CAP];
     int len;
 } Snake;
 
@@ -55,7 +54,7 @@ typedef struct {
 static State game;
 static int score;
 static Snake snake;
-static Vector2 snake_pos[snake_cap];
+static Vector2 snake_pos[SNAKE_CAP];
 static Apple apple;
 
 void init_game(void)
@@ -63,23 +62,22 @@ void init_game(void)
     game = STANDBY;
     score = 0;
     snake.len = 1;
-    for (int i = 0; i < snake_cap; ++i) {
+    for (int i = 0; i < SNAKE_CAP; ++i) {
         snake.cells[i].pos = (Vector2){
-            offset.x / 2 + ((screen_width / 20.0) / 2 - 3) * cell_size,
-            offset.y / 2 + ((screen_height / 20.0) / 2) * cell_size};
-        snake.cells[i].speed = (Vector2){cell_size, 0};
-        snake.cells[i].size = (Vector2){cell_size, cell_size};
+            offset.x / 2 + ((SCREEN_WIDTH / 20.0) / 2 - 3) * CELL_SIZE,
+            offset.y / 2 + ((SCREEN_HEIGHT / 20.0) / 2) * CELL_SIZE};
+        snake.cells[i].speed = (Vector2){CELL_SIZE, 0};
     }
-    apple.radius = cell_size * .4;
+    apple.radius = CELL_SIZE * .4;
     apple.active = false;
 }
 
 Vector2 get_random_apple_pos(void)
 {
     return (Vector2){
-        GetRandomValue(0, (screen_width / cell_size) - 1) * cell_size +
+        GetRandomValue(0, (SCREEN_WIDTH / CELL_SIZE) - 1) * CELL_SIZE +
             offset.x / 2,
-        GetRandomValue(0, (screen_height / cell_size) - 1) * cell_size +
+        GetRandomValue(0, (SCREEN_HEIGHT / CELL_SIZE) - 1) * CELL_SIZE +
             offset.y / 2};
 }
 
@@ -99,15 +97,15 @@ void update_game(void)
         // snake step
         snake.cells[0].pos.x += snake.cells[0].speed.x;
         snake.cells[0].pos.y += snake.cells[0].speed.y;
-        for (int i = 1; i < snake_cap; ++i) {
+        for (int i = 1; i < SNAKE_CAP; ++i) {
             snake.cells[i].pos = snake_pos[i - 1];
         }
 
         // snake-wall collision
         if (snake.cells[0].pos.x < offset.x / 2 ||
-            snake.cells[0].pos.x > screen_width - offset.x / 2 - cell_size ||
+            snake.cells[0].pos.x > SCREEN_WIDTH - offset.x / 2 - CELL_SIZE ||
             snake.cells[0].pos.y < offset.y / 2 ||
-            snake.cells[0].pos.y > screen_height - offset.y / 2 - cell_size) {
+            snake.cells[0].pos.y > SCREEN_HEIGHT - offset.y / 2 - CELL_SIZE) {
             game = OVER;
         }
 
@@ -116,16 +114,16 @@ void update_game(void)
             game = PAUSED;
         }
         if (IsKeyPressed(KEY_RIGHT) && (snake.cells[0].speed.x == 0)) {
-            snake.cells[0].speed = (Vector2){cell_size, 0};
+            snake.cells[0].speed = (Vector2){CELL_SIZE, 0};
         }
         if (IsKeyPressed(KEY_LEFT) && (snake.cells[0].speed.x == 0)) {
-            snake.cells[0].speed = (Vector2){-cell_size, 0};
+            snake.cells[0].speed = (Vector2){-CELL_SIZE, 0};
         }
         if (IsKeyPressed(KEY_UP) && (snake.cells[0].speed.y == 0)) {
-            snake.cells[0].speed = (Vector2){0, -cell_size};
+            snake.cells[0].speed = (Vector2){0, -CELL_SIZE};
         }
         if (IsKeyPressed(KEY_DOWN) && (snake.cells[0].speed.y == 0)) {
-            snake.cells[0].speed = (Vector2){0, cell_size};
+            snake.cells[0].speed = (Vector2){0, CELL_SIZE};
         }
 
         // spawn random apple
@@ -144,12 +142,12 @@ void update_game(void)
         // snake-apple collision
         if (CheckCollisionRecs((Rectangle){.x = snake.cells[0].pos.x,
                                            .y = snake.cells[0].pos.y,
-                                           .width = snake.cells[0].size.x,
-                                           .height = snake.cells[0].size.y},
+                                           .width = CELL_SIZE,
+                                           .height = CELL_SIZE},
                                (Rectangle){.x = apple.pos.x,
                                            .y = apple.pos.y,
-                                           .width = cell_size,
-                                           .height = cell_size})) {
+                                           .width = CELL_SIZE,
+                                           .height = CELL_SIZE})) {
             snake.cells[snake.len].pos = snake_pos[snake.len - 1];
             snake.len += 1;
             score += 1;
@@ -194,12 +192,13 @@ void draw_game(void)
         }
     }
 #endif
-    DrawRectangleLines(offset.x / 2, offset.y / 2, screen_width - offset.x,
-                       screen_height - offset.y, GRAY);
+    DrawRectangleLines(offset.x / 2, offset.y / 2, SCREEN_WIDTH - offset.x,
+                       SCREEN_HEIGHT - offset.y, GRAY);
 
     // draw snake
     for (int i = 0; i < snake.len; ++i) {
-        DrawRectangleV(snake.cells[i].pos, snake.cells[i].size, SNAKE_COLOR);
+        DrawRectangleV(snake.cells[i].pos, (Vector2){CELL_SIZE, CELL_SIZE},
+                       SNAKE_COLOR);
     }
 
     // draw apple
@@ -212,36 +211,36 @@ void draw_game(void)
     // draw game intro
     if (game == STANDBY) {
         DrawText(TextFormat("Press <Space> to start"),
-                 screen_width / 2 -
+                 SCREEN_WIDTH / 2 -
                      MeasureText("Press <Space> to start", 20) / 2,
-                 screen_height / 3 * 2 - 20 / 2, 20, GRAY);
+                 SCREEN_HEIGHT / 3 * 2 - 20 / 2, 20, GRAY);
     }
 
     // draw score text
-    DrawText(TextFormat("Score: %d", score), 20, screen_height + 5, 20,
+    DrawText(TextFormat("Score: %d", score), 20, SCREEN_HEIGHT + 5, 20,
              RAYWHITE);
 
     // draw game over texts
     if (game == OVER) {
         DrawText(TextFormat("GAME OVER"),
-                 screen_width / 2 - MeasureText("GAME OVER", 30) / 2,
-                 screen_height * .35, 30, RAYWHITE);
+                 SCREEN_WIDTH / 2 - MeasureText("GAME OVER", 30) / 2,
+                 SCREEN_HEIGHT * .35, 30, RAYWHITE);
         DrawText(TextFormat("Score: %d", score),
-                 screen_width / 2 -
+                 SCREEN_WIDTH / 2 -
                      MeasureText(TextFormat("Score: %d", score), 30) / 2,
-                 screen_height * .45, 30, RAYWHITE);
+                 SCREEN_HEIGHT * .45, 30, RAYWHITE);
         DrawText(TextFormat("Press <space> to restart"),
-                 screen_width / 2 -
+                 SCREEN_WIDTH / 2 -
                      MeasureText("Press <space> to restart", 30) / 2,
-                 screen_height * .55, 30, RAYWHITE);
+                 SCREEN_HEIGHT * .55, 30, RAYWHITE);
     }
     EndDrawing();
 }
 
 int main(void)
 {
-    InitWindow(screen_width, screen_height, "Snake");
-    SetTargetFPS(fps);
+    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Snake");
+    SetTargetFPS(FPS);
 
     init_game();
 
