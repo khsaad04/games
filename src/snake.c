@@ -1,61 +1,21 @@
+#include "snake.h"
 #include <raylib.h>
 
-/*#define CHECKERBOARD*/
+int main(void)
+{
+    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Snake");
+    SetTargetFPS(FPS);
 
-#ifdef CHECKERBOARD
+    init_game();
 
-#define SNAKE_COLOR BLUE
-#define APPLE_COLOR RED
-#define BG1                                                                    \
-    (Color) { 20, 20, 20, 255 }
-#define BG2                                                                    \
-    (Color) { 10, 10, 10, 255 }
-
-#else
-
-#define SNAKE_COLOR RAYWHITE
-#define APPLE_COLOR RAYWHITE
-#define BG1 BLACK
-#define BG2 BLACK
-
-#endif
-
-#define SCALE 1
-#define SCREEN_WIDTH ((int)(800 * SCALE))
-#define SCREEN_HEIGHT ((int)(600 * SCALE))
-#define FPS 12
-#define CELL_SIZE (int)(20 * SCALE)
-#define ROWS ((int)(SCREEN_HEIGHT / CELL_SIZE))
-#define COLS ((int)(SCREEN_WIDTH / CELL_SIZE))
-#define SNAKE_CAP (ROWS * COLS)
-#define offset                                                                 \
-    (Vector2)                                                                  \
-    {                                                                          \
-        SCREEN_WIDTH % (CELL_SIZE * COLS), SCREEN_HEIGHT % (CELL_SIZE * ROWS)  \
+    while (!WindowShouldClose()) {
+        update_game();
+        draw_game();
     }
 
-typedef enum State { STANDBY, RUNNING, PAUSED, OVER } State;
-
-typedef struct {
-    Vector2 pos, speed;
-} SnakeCell;
-
-typedef struct {
-    SnakeCell cells[SNAKE_CAP];
-    int len;
-} Snake;
-
-typedef struct {
-    Vector2 pos;
-    float radius;
-    bool active;
-} Apple;
-
-static State game;
-static int score;
-static Snake snake;
-static Vector2 snake_pos[SNAKE_CAP];
-static Apple apple;
+    CloseWindow();
+    return 0;
+}
 
 void init_game(void)
 {
@@ -63,22 +23,13 @@ void init_game(void)
     score = 0;
     snake.len = 1;
     for (int i = 0; i < SNAKE_CAP; ++i) {
-        snake.cells[i].pos = (Vector2){
-            offset.x / 2 + ((SCREEN_WIDTH / 20.0) / 2 - 3) * CELL_SIZE,
-            offset.y / 2 + ((SCREEN_HEIGHT / 20.0) / 2) * CELL_SIZE};
+        snake.cells[i].pos =
+            (Vector2){((SCREEN_WIDTH / 20.0) / 2 - 3) * CELL_SIZE,
+                      ((SCREEN_HEIGHT / 20.0) / 2) * CELL_SIZE};
         snake.cells[i].speed = (Vector2){CELL_SIZE, 0};
     }
     apple.radius = CELL_SIZE * .4;
     apple.active = false;
-}
-
-Vector2 get_random_apple_pos(void)
-{
-    return (Vector2){
-        GetRandomValue(0, (SCREEN_WIDTH / CELL_SIZE) - 1) * CELL_SIZE +
-            offset.x / 2,
-        GetRandomValue(0, (SCREEN_HEIGHT / CELL_SIZE) - 1) * CELL_SIZE +
-            offset.y / 2};
 }
 
 void update_game(void)
@@ -102,28 +53,32 @@ void update_game(void)
         }
 
         // snake-wall collision
-        if (snake.cells[0].pos.x < offset.x / 2 ||
-            snake.cells[0].pos.x > SCREEN_WIDTH - offset.x / 2 - CELL_SIZE ||
-            snake.cells[0].pos.y < offset.y / 2 ||
-            snake.cells[0].pos.y > SCREEN_HEIGHT - offset.y / 2 - CELL_SIZE) {
+        if (snake.cells[0].pos.x < 0 ||
+            snake.cells[0].pos.x > SCREEN_WIDTH - CELL_SIZE ||
+            snake.cells[0].pos.y < 0 ||
+            snake.cells[0].pos.y > SCREEN_HEIGHT - CELL_SIZE) {
             game = OVER;
         }
 
         // controls
-        if (IsKeyPressed(KEY_P)) {
+        if (IsKeyPressed(KEY_P) || IsKeyPressed(KEY_SPACE)) {
             game = PAUSED;
         }
-        if (IsKeyPressed(KEY_RIGHT) && (snake.cells[0].speed.x == 0)) {
-            snake.cells[0].speed = (Vector2){CELL_SIZE, 0};
-        }
-        if (IsKeyPressed(KEY_LEFT) && (snake.cells[0].speed.x == 0)) {
-            snake.cells[0].speed = (Vector2){-CELL_SIZE, 0};
-        }
-        if (IsKeyPressed(KEY_UP) && (snake.cells[0].speed.y == 0)) {
+        if ((IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)) &&
+            (snake.cells[0].speed.y == 0)) {
             snake.cells[0].speed = (Vector2){0, -CELL_SIZE};
         }
-        if (IsKeyPressed(KEY_DOWN) && (snake.cells[0].speed.y == 0)) {
+        if ((IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_A)) &&
+            (snake.cells[0].speed.x == 0)) {
+            snake.cells[0].speed = (Vector2){-CELL_SIZE, 0};
+        }
+        if ((IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S)) &&
+            (snake.cells[0].speed.y == 0)) {
             snake.cells[0].speed = (Vector2){0, CELL_SIZE};
+        }
+        if ((IsKeyPressed(KEY_RIGHT) || IsKeyPressed(KEY_D)) &&
+            (snake.cells[0].speed.x == 0)) {
+            snake.cells[0].speed = (Vector2){CELL_SIZE, 0};
         }
 
         // spawn random apple
@@ -163,7 +118,7 @@ void update_game(void)
         }
         break;
     case PAUSED:
-        if (IsKeyPressed(KEY_P)) {
+        if (IsKeyPressed(KEY_P) || IsKeyPressed(KEY_SPACE)) {
             game = RUNNING;
         }
         break;
@@ -174,6 +129,13 @@ void update_game(void)
         }
         break;
     }
+}
+
+Vector2 get_random_apple_pos(void)
+{
+    return (Vector2){
+        GetRandomValue(0, (SCREEN_WIDTH / CELL_SIZE) - 1) * CELL_SIZE,
+        GetRandomValue(0, (SCREEN_HEIGHT / CELL_SIZE) - 1) * CELL_SIZE};
 }
 
 void draw_game(void)
@@ -192,9 +154,6 @@ void draw_game(void)
         }
     }
 #endif
-    DrawRectangleLines(offset.x / 2, offset.y / 2, SCREEN_WIDTH - offset.x,
-                       SCREEN_HEIGHT - offset.y, GRAY);
-
     // draw snake
     for (int i = 0; i < snake.len; ++i) {
         DrawRectangleV(snake.cells[i].pos, (Vector2){CELL_SIZE, CELL_SIZE},
@@ -208,47 +167,30 @@ void draw_game(void)
             apple.radius, APPLE_COLOR);
     }
 
+    const char *text;
+
     // draw game intro
+    text = "Press <Space> to start";
     if (game == STANDBY) {
-        DrawText(TextFormat("Press <Space> to start"),
-                 SCREEN_WIDTH / 2 -
-                     MeasureText("Press <Space> to start", 20) / 2,
-                 SCREEN_HEIGHT / 3 * 2 - 20 / 2, 20, GRAY);
+        DrawText(text, SCREEN_WIDTH / 2 - MeasureText(text, 20) / 2.0,
+                 SCREEN_HEIGHT / 3 * 2 - 20.0 / 2, 20, GRAY);
     }
 
     // draw score text
-    DrawText(TextFormat("Score: %d", score), 20, SCREEN_HEIGHT + 5, 20,
-             RAYWHITE);
+    text = TextFormat("Score: %d", score);
+    DrawText(text, 20, SCREEN_HEIGHT - 25, 20, GRAY);
 
     // draw game over texts
     if (game == OVER) {
-        DrawText(TextFormat("GAME OVER"),
-                 SCREEN_WIDTH / 2 - MeasureText("GAME OVER", 30) / 2,
+        text = "GAME OVER";
+        DrawText(text, SCREEN_WIDTH / 2 - MeasureText(text, 30) / 2.0,
                  SCREEN_HEIGHT * .35, 30, RAYWHITE);
-        DrawText(TextFormat("Score: %d", score),
-                 SCREEN_WIDTH / 2 -
-                     MeasureText(TextFormat("Score: %d", score), 30) / 2,
+        text = TextFormat("Score: %d", score);
+        DrawText(text, SCREEN_WIDTH / 2 - MeasureText(text, 30) / 2.0,
                  SCREEN_HEIGHT * .45, 30, RAYWHITE);
-        DrawText(TextFormat("Press <space> to restart"),
-                 SCREEN_WIDTH / 2 -
-                     MeasureText("Press <space> to restart", 30) / 2,
+        text = "Press <space> to restart";
+        DrawText(text, SCREEN_WIDTH / 2 - MeasureText(text, 30) / 2.0,
                  SCREEN_HEIGHT * .55, 30, RAYWHITE);
     }
     EndDrawing();
-}
-
-int main(void)
-{
-    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Snake");
-    SetTargetFPS(FPS);
-
-    init_game();
-
-    while (!WindowShouldClose()) {
-        update_game();
-        draw_game();
-    }
-
-    CloseWindow();
-    return 0;
 }
