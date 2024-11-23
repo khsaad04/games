@@ -113,6 +113,7 @@ void update_game(void)
         }
 
         // ball-brick collision
+        int bricks_left = 0;
         for (int i = 0; i < ROWS; ++i) {
             for (int j = 0; j < COLS; ++j) {
                 Rectangle enemy = {
@@ -129,15 +130,10 @@ void update_game(void)
                         bricks[i][j].alive = false;
                     }
                 }
-            }
-        }
-
-        int bricks_left = 0;
-        for (int i = 0; i < ROWS; ++i) {
-            for (int j = 0; j < COLS; ++j) {
                 bricks_left += bricks[i][j].alive;
             }
         }
+
         if (bricks_left == 0)
             init_bricks();
 
