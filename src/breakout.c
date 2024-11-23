@@ -1,4 +1,5 @@
 #include "breakout.h"
+#include <math.h>
 #include <raylib.h>
 
 int main(void)
@@ -31,6 +32,7 @@ void init_game(void)
 
     ball.pos = (Vector2){w / 2.0, h - w * 0.1 - BALL_RADIUS - player.size.y};
     ball.speed = (Vector2){BALL_SPEED, BALL_SPEED};
+    ball.accel = (Vector2){BALL_ACCEL, BALL_ACCEL};
     ball.radius = BALL_RADIUS;
 
     init_bricks();
@@ -80,6 +82,11 @@ void update_game(void)
         // ball movement
         ball.pos.x += ball.speed.x * GetFrameTime();
         ball.pos.y += ball.speed.y * GetFrameTime();
+
+        ball.speed.x +=
+            ball.accel.x * copysignf(1.0, ball.speed.x) * GetFrameTime();
+        ball.speed.y +=
+            ball.accel.y * copysignf(1.0, ball.speed.y) * GetFrameTime();
 
         // ball-wall collision
         if (ball.pos.x > SCREEN_WIDTH || ball.pos.x < 0) {

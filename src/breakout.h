@@ -14,6 +14,7 @@
 #define PLAYER_SPEED (600 * SCALE)
 #define BALL_RADIUS (10 * SCALE)
 #define BALL_SPEED (300 * SCALE)
+#define BALL_ACCEL (5 * SCALE)
 #define BRICK_WIDTH                                                            \
     ((SCREEN_WIDTH - BALL_RADIUS * 6.0 - 5.0 * (COLS - 1)) / COLS)
 #define BRICK_HEIGHT                                                           \
@@ -27,7 +28,7 @@ typedef struct {
 } Player;
 
 typedef struct {
-    Vector2 pos, speed;
+    Vector2 pos, speed, accel;
     float radius;
 } Ball;
 
