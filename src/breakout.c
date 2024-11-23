@@ -113,12 +113,11 @@ void update_game(void)
         if (CheckCollisionCircleRec(ball.pos, ball.radius, player_rect)) {
             ball.pos.y = player.pos.y - ball.radius;
             ball.speed.y *= -1;
-            if (player.speed.x < 0 && ball.speed.x > 0) {
-                ball.speed.x *= -1;
-            }
-            if (player.speed.x > 0 && ball.speed.x < 0) {
-                ball.speed.x *= -1;
-            }
+
+            float player_center = player.pos.x + player.size.x / 2;
+            float dx_from_center =
+                (ball.pos.x - player_center) / (player.size.x / 2);
+            ball.speed.x = BALL_SPEED * dx_from_center;
         }
 
         // ball-brick collision
