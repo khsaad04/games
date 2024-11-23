@@ -43,6 +43,7 @@ static Ball ball;
 static Bricks bricks[ROWS][COLS];
 
 void init_game(void);
+void init_bricks(void);
 void update_game(void);
 void draw_game(void);
 

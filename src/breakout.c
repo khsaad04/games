@@ -33,15 +33,7 @@ void init_game(void)
     ball.speed = (Vector2){BALL_SPEED, BALL_SPEED};
     ball.radius = BALL_RADIUS;
 
-    for (int i = 0; i < ROWS; ++i) {
-        for (int j = 0; j < COLS; ++j) {
-            bricks[i][j].pos =
-                (Vector2){ball.radius * 3 + j * BRICK_WIDTH + j * 5,
-                          ball.radius * 3 + i * BRICK_HEIGHT + i * 5};
-            bricks[i][j].size = (Vector2){BRICK_WIDTH, BRICK_HEIGHT};
-            bricks[i][j].alive = true;
-        }
-    }
+    init_bricks();
 }
 
 void update_game(void)
@@ -139,6 +131,16 @@ void update_game(void)
                 }
             }
         }
+
+        int bricks_left = 0;
+        for (int i = 0; i < ROWS; ++i) {
+            for (int j = 0; j < COLS; ++j) {
+                bricks_left += bricks[i][j].alive;
+            }
+        }
+        if (bricks_left == 0)
+            init_bricks();
+
         break;
     case PAUSED:
         // unpause game
@@ -155,11 +157,26 @@ void update_game(void)
     }
 }
 
+void init_bricks(void)
+{
+    for (int i = 0; i < ROWS; ++i) {
+        for (int j = 0; j < COLS; ++j) {
+            bricks[i][j].pos =
+                (Vector2){ball.radius * 3 + j * BRICK_WIDTH + j * 5,
+                          ball.radius * 3 + i * BRICK_HEIGHT + i * 5};
+            bricks[i][j].size = (Vector2){BRICK_WIDTH, BRICK_HEIGHT};
+            bricks[i][j].alive = true;
+        }
+    }
+}
+
 void draw_game(void)
 {
     BeginDrawing();
 
     ClearBackground(BLACK);
+
+    // draw enemy bricks
     for (int i = 0; i < ROWS; ++i) {
         for (int j = 0; j < COLS; ++j) {
             if (bricks[i][j].alive == true) {
@@ -167,8 +184,12 @@ void draw_game(void)
             }
         }
     }
+
+    // draw player tile
     DrawRectangleV(player.pos, (Vector2){player.size.x, player.size.y},
                    RAYWHITE);
+
+    // draw ball
     DrawCircleV(ball.pos, ball.radius, RAYWHITE);
 
     int w = (int)SCREEN_WIDTH;
