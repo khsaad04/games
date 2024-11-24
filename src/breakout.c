@@ -23,18 +23,14 @@ void init_game(void)
     score = 0;
     game = STANDBY;
 
-    int w = (int)SCREEN_WIDTH;
-    int h = (int)SCREEN_HEIGHT;
-
-    player.rect = (Rectangle){.x = w / 2.0 - PLAYER_WIDTH / 2.0,
-                              .y = h - h * 0.1,
+    player.rect = (Rectangle){.x = SCREEN_WIDTH / 2.0 - PLAYER_WIDTH / 2.0,
+                              .y = SCREEN_HEIGHT - SCREEN_HEIGHT * 0.1,
                               .width = PLAYER_WIDTH,
                               .height = PLAYER_HEIGHT};
-    player.velocity = (Vector2){PLAYER_SPEED, 0};
+    player.velocity = PLAYER_SPEED;
 
-    ball.pos =
-        (Vector2){w / 2.0, h - w * 0.1 - BALL_RADIUS - player.rect.height};
-    ball.velocity = (Vector2){BALL_SPEED, BALL_SPEED};
+    ball.pos = (Vector2){SCREEN_WIDTH / 2.0, 2.0 * SCREEN_HEIGHT / 3.0};
+    ball.velocity = (Vector2){BALL_SPEED, -BALL_SPEED};
     ball.accel = (Vector2){BALL_ACCEL, BALL_ACCEL};
     ball.radius = BALL_RADIUS;
 
@@ -46,8 +42,7 @@ void update_game(void)
     switch (game) {
     case STANDBY:
         // start game
-        if (IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A) || IsKeyDown(KEY_RIGHT) ||
-            IsKeyDown(KEY_D)) {
+        if (IsKeyPressed(KEY_SPACE)) {
             game = RUNNING;
         }
         break;
@@ -59,18 +54,18 @@ void update_game(void)
 
         // player control
         if (IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A)) {
-            if (player.velocity.x > 0) {
-                player.velocity.x *= -1;
+            if (player.velocity > 0) {
+                player.velocity *= -1;
             }
-            player.rect.x += player.velocity.x * GetFrameTime();
+            player.rect.x += player.velocity * GetFrameTime();
         }
 
         if (IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_D)) {
             game = RUNNING;
-            if (player.velocity.x < 0) {
-                player.velocity.x *= -1;
+            if (player.velocity < 0) {
+                player.velocity *= -1;
             }
-            player.rect.x += player.velocity.x * GetFrameTime();
+            player.rect.x += player.velocity * GetFrameTime();
         }
 
         // player-wall collision
@@ -86,8 +81,6 @@ void update_game(void)
         ball.pos.x += ball.velocity.x * GetFrameTime();
         ball.pos.y += ball.velocity.y * GetFrameTime();
 
-        ball.velocity.x +=
-            ball.accel.x * copysignf(1.0, ball.velocity.x) * GetFrameTime();
         ball.velocity.y +=
             ball.accel.y * copysignf(1.0, ball.velocity.y) * GetFrameTime();
 
@@ -109,31 +102,43 @@ void update_game(void)
             ball.pos.y = player.rect.y - ball.radius;
             ball.velocity.y *= -1;
 
-            if (player.velocity.x < 0 && ball.velocity.x > 0) {
+            float player_center = player.rect.x + player.rect.width / 2;
+            float ball_dx_from_center = ball.pos.x - player_center;
+            float normalized_ball_dx_from_center =
+                ball_dx_from_center / (player.rect.width / 2);
+            ball.velocity.x = BALL_SPEED * normalized_ball_dx_from_center;
+
+            if (player.velocity < 0 && ball.velocity.x > 0) {
                 ball.velocity.x *= -1;
             }
-            if (player.velocity.x > 0 && ball.velocity.x < 0) {
+            if (player.velocity > 0 && ball.velocity.x < 0) {
                 ball.velocity.x *= -1;
             }
         }
 
         // ball-brick collision
-        int bricks_left = 0;
         for (int i = 0; i < BRICK_ROWS; ++i) {
             for (int j = 0; j < BRICK_COLS; ++j) {
                 if (CheckCollisionCircleRec((Vector2){ball.pos.x, ball.pos.y},
                                             ball.radius, bricks[i][j].rect)) {
-                    if (bricks[i][j].alive == true) {
+                    if (!bricks[i][j].hit) {
                         score += 1;
-                        ball.velocity.y *= -1;
-                        bricks[i][j].alive = false;
+                        if (ball.pos.x + ball.radius < bricks[i][j].rect.x ||
+                            ball.pos.x - ball.radius >
+                                bricks[i][j].rect.x + bricks[i][j].rect.width) {
+                            ball.velocity.x *= -1;
+                        }
+                        else {
+                            ball.velocity.y *= -1;
+                        }
+                        bricks[i][j].hit = 1;
                     }
                 }
-                bricks_left += bricks[i][j].alive;
             }
         }
 
-        if (bricks_left == 0)
+        // reset bricks
+        if (fmodf(score, 100) == 0)
             init_bricks();
 
         break;
@@ -156,11 +161,11 @@ void init_bricks(void)
 {
     for (int i = 0; i < BRICK_ROWS; ++i) {
         for (int j = 0; j < BRICK_COLS; ++j) {
-            bricks[i][j].rect.x = ball.radius * 3 + j * BRICK_WIDTH + j * 5;
-            bricks[i][j].rect.y = ball.radius * 3 + i * BRICK_HEIGHT + i * 5;
+            bricks[i][j].rect.x = 2.5 + j * BRICK_WIDTH + j * 5;
+            bricks[i][j].rect.y = 2.5 + i * BRICK_HEIGHT + i * 5;
             bricks[i][j].rect.width = BRICK_WIDTH;
             bricks[i][j].rect.height = BRICK_HEIGHT;
-            bricks[i][j].alive = true;
+            bricks[i][j].hit = 0;
         }
     }
 }
@@ -174,7 +179,7 @@ void draw_game(void)
     // draw enemy bricks
     for (int i = 0; i < BRICK_ROWS; ++i) {
         for (int j = 0; j < BRICK_COLS; ++j) {
-            if (bricks[i][j].alive == true) {
+            if (!bricks[i][j].hit) {
                 DrawRectangle(bricks[i][j].rect.x, bricks[i][j].rect.y,
                               bricks[i][j].rect.width, bricks[i][j].rect.height,
                               RAYWHITE);
@@ -189,35 +194,36 @@ void draw_game(void)
     // draw ball
     DrawCircleV(ball.pos, ball.radius, RAYWHITE);
 
-    int w = (int)SCREEN_WIDTH;
-    int h = (int)SCREEN_HEIGHT;
-
     const char *text;
     switch (game) {
     case STANDBY:
-        text = "Press <-/A or ->/D to start";
-        DrawText(text, w / 2 - MeasureText(text, FONT_SIZE) / 2, h * .75,
-                 FONT_SIZE, RAYWHITE);
+        text = "Press <space> to start";
+        DrawText(text, SCREEN_WIDTH / 2 - MeasureText(text, FONT_SIZE) / 2.0,
+                 SCREEN_HEIGHT * .75, FONT_SIZE, RAYWHITE);
         break;
     case RUNNING:
-        DrawText(TextFormat("Score: %d", score), 20, h - 25, FONT_SIZE,
-                 RAYWHITE);
+        DrawText(TextFormat("Score: %d", score), 20, SCREEN_HEIGHT - 25,
+                 FONT_SIZE, RAYWHITE);
         break;
     case PAUSED:
         text = "Press P/<space> to resume";
-        DrawText(text, w / 2 - MeasureText(text, FONT_SIZE * 3 / 2) / 2,
-                 h * .55, FONT_SIZE * 3 / 2, RAYWHITE);
+        DrawText(text,
+                 SCREEN_WIDTH / 2 - MeasureText(text, FONT_SIZE * 3 / 2) / 2.0,
+                 SCREEN_HEIGHT * .55, FONT_SIZE * 3 / 2, RAYWHITE);
         break;
     case OVER:
         text = "GAME OVER";
-        DrawText(text, w / 2 - MeasureText(text, FONT_SIZE * 3 / 2) / 2,
-                 h * .55, FONT_SIZE * 3 / 2, RAYWHITE);
+        DrawText(text,
+                 SCREEN_WIDTH / 2 - MeasureText(text, FONT_SIZE * 3 / 2) / 2.0,
+                 SCREEN_HEIGHT * .55, FONT_SIZE * 3 / 2, RAYWHITE);
         text = TextFormat("Score: %d", score);
-        DrawText(text, w / 2 - MeasureText(text, FONT_SIZE * 3 / 2) / 2,
-                 h * .65, FONT_SIZE * 3 / 2, RAYWHITE);
+        DrawText(text,
+                 SCREEN_WIDTH / 2 - MeasureText(text, FONT_SIZE * 3 / 2) / 2.0,
+                 SCREEN_HEIGHT * .65, FONT_SIZE * 3 / 2, RAYWHITE);
         text = "Press <space> to restart";
-        DrawText(text, w / 2 - MeasureText(text, FONT_SIZE * 3 / 2) / 2,
-                 h * .75, FONT_SIZE * 3 / 2, RAYWHITE);
+        DrawText(text,
+                 SCREEN_WIDTH / 2 - MeasureText(text, FONT_SIZE * 3 / 2) / 2.0,
+                 SCREEN_HEIGHT * .75, FONT_SIZE * 3 / 2, RAYWHITE);
         break;
     }
 
