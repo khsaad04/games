@@ -7,33 +7,34 @@
 #define SCREEN_WIDTH (800 * SCALE)
 #define SCREEN_HEIGHT (600 * SCALE)
 #define FPS 60
-#define ROWS 10
-#define COLS 10
 #define PLAYER_WIDTH (100 * SCALE)
 #define PLAYER_HEIGHT (10 * SCALE)
 #define PLAYER_SPEED (600 * SCALE)
 #define BALL_RADIUS (10 * SCALE)
 #define BALL_SPEED (300 * SCALE)
-#define BALL_ACCEL (5 * SCALE)
+#define BALL_ACCEL (1 * SCALE)
+#define BRICK_ROWS 10
+#define BRICK_COLS 10
 #define BRICK_WIDTH                                                            \
-    ((SCREEN_WIDTH - BALL_RADIUS * 6.0 - 5.0 * (COLS - 1)) / COLS)
+    ((SCREEN_WIDTH - BALL_RADIUS * 6.0 - 5.0 * (BRICK_COLS - 1)) / BRICK_COLS)
 #define BRICK_HEIGHT                                                           \
-    ((SCREEN_HEIGHT * 0.5 - BALL_RADIUS * 3.0 - 5.0 * (ROWS - 1)) / ROWS)
+    ((SCREEN_HEIGHT * 0.5 - BALL_RADIUS * 3.0 - 5.0 * (BRICK_ROWS - 1)) / BRICK_ROWS)
 #define FONT_SIZE (20 * SCALE)
 
 typedef enum State { STANDBY, RUNNING, PAUSED, OVER } State;
 
 typedef struct {
-    Vector2 pos, speed, size;
+    Rectangle rect;
+    Vector2 velocity;
 } Player;
 
 typedef struct {
-    Vector2 pos, speed, accel;
+    Vector2 pos, velocity, accel;
     float radius;
 } Ball;
 
 typedef struct {
-    Vector2 pos, size;
+    Rectangle rect;
     bool alive;
 } Bricks;
 
@@ -41,7 +42,7 @@ static State game;
 static int score;
 static Player player;
 static Ball ball;
-static Bricks bricks[ROWS][COLS];
+static Bricks bricks[BRICK_ROWS][BRICK_COLS];
 
 void init_game(void);
 void init_bricks(void);

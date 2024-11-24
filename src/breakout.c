@@ -26,12 +26,15 @@ void init_game(void)
     int w = (int)SCREEN_WIDTH;
     int h = (int)SCREEN_HEIGHT;
 
-    player.pos = (Vector2){w / 2.0 - PLAYER_WIDTH / 2.0, h - h * 0.1};
-    player.speed = (Vector2){PLAYER_SPEED, 0};
-    player.size = (Vector2){PLAYER_WIDTH, PLAYER_HEIGHT};
+    player.rect = (Rectangle){.x = w / 2.0 - PLAYER_WIDTH / 2.0,
+                              .y = h - h * 0.1,
+                              .width = PLAYER_WIDTH,
+                              .height = PLAYER_HEIGHT};
+    player.velocity = (Vector2){PLAYER_SPEED, 0};
 
-    ball.pos = (Vector2){w / 2.0, h - w * 0.1 - BALL_RADIUS - player.size.y};
-    ball.speed = (Vector2){BALL_SPEED, BALL_SPEED};
+    ball.pos =
+        (Vector2){w / 2.0, h - w * 0.1 - BALL_RADIUS - player.rect.height};
+    ball.velocity = (Vector2){BALL_SPEED, BALL_SPEED};
     ball.accel = (Vector2){BALL_ACCEL, BALL_ACCEL};
     ball.radius = BALL_RADIUS;
 
@@ -56,45 +59,45 @@ void update_game(void)
 
         // player control
         if (IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A)) {
-            if (player.speed.x > 0) {
-                player.speed.x *= -1;
+            if (player.velocity.x > 0) {
+                player.velocity.x *= -1;
             }
-            player.pos.x += player.speed.x * GetFrameTime();
+            player.rect.x += player.velocity.x * GetFrameTime();
         }
 
         if (IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_D)) {
             game = RUNNING;
-            if (player.speed.x < 0) {
-                player.speed.x *= -1;
+            if (player.velocity.x < 0) {
+                player.velocity.x *= -1;
             }
-            player.pos.x += player.speed.x * GetFrameTime();
+            player.rect.x += player.velocity.x * GetFrameTime();
         }
 
         // player-wall collision
-        if (player.pos.x > SCREEN_WIDTH - player.size.x) {
-            player.pos.x = SCREEN_WIDTH - player.size.x;
+        if (player.rect.x > SCREEN_WIDTH - player.rect.width) {
+            player.rect.x = SCREEN_WIDTH - player.rect.width;
         }
 
-        if (player.pos.x < 0) {
-            player.pos.x = 0;
+        if (player.rect.x < 0) {
+            player.rect.x = 0;
         }
 
         // ball movement
-        ball.pos.x += ball.speed.x * GetFrameTime();
-        ball.pos.y += ball.speed.y * GetFrameTime();
+        ball.pos.x += ball.velocity.x * GetFrameTime();
+        ball.pos.y += ball.velocity.y * GetFrameTime();
 
-        ball.speed.x +=
-            ball.accel.x * copysignf(1.0, ball.speed.x) * GetFrameTime();
-        ball.speed.y +=
-            ball.accel.y * copysignf(1.0, ball.speed.y) * GetFrameTime();
+        ball.velocity.x +=
+            ball.accel.x * copysignf(1.0, ball.velocity.x) * GetFrameTime();
+        ball.velocity.y +=
+            ball.accel.y * copysignf(1.0, ball.velocity.y) * GetFrameTime();
 
         // ball-wall collision
         if (ball.pos.x > SCREEN_WIDTH || ball.pos.x < 0) {
-            ball.speed.x *= -1;
+            ball.velocity.x *= -1;
         }
 
         if (ball.pos.y < 0) {
-            ball.speed.y *= -1;
+            ball.velocity.y *= -1;
         }
 
         if (ball.pos.y > SCREEN_HEIGHT + ball.radius) {
@@ -102,40 +105,27 @@ void update_game(void)
         }
 
         // ball-player collision
-        Rectangle player_rect = {
-            .x = player.pos.x,
-            .y = player.pos.y,
-            .width = player.size.x,
-            .height = player.size.y,
-        };
+        if (CheckCollisionCircleRec(ball.pos, ball.radius, player.rect)) {
+            ball.pos.y = player.rect.y - ball.radius;
+            ball.velocity.y *= -1;
 
-        if (CheckCollisionCircleRec(ball.pos, ball.radius, player_rect)) {
-            ball.pos.y = player.pos.y - ball.radius;
-            ball.speed.y *= -1;
-
-            if (player.speed.x < 0 && ball.speed.x > 0) {
-                ball.speed.x *= -1;
+            if (player.velocity.x < 0 && ball.velocity.x > 0) {
+                ball.velocity.x *= -1;
             }
-            if (player.speed.x > 0 && ball.speed.x < 0) {
-                ball.speed.x *= -1;
+            if (player.velocity.x > 0 && ball.velocity.x < 0) {
+                ball.velocity.x *= -1;
             }
         }
 
         // ball-brick collision
         int bricks_left = 0;
-        for (int i = 0; i < ROWS; ++i) {
-            for (int j = 0; j < COLS; ++j) {
-                Rectangle enemy = {
-                    .x = bricks[i][j].pos.x,
-                    .y = bricks[i][j].pos.y,
-                    .width = bricks[i][j].size.x,
-                    .height = bricks[i][j].size.y,
-                };
+        for (int i = 0; i < BRICK_ROWS; ++i) {
+            for (int j = 0; j < BRICK_COLS; ++j) {
                 if (CheckCollisionCircleRec((Vector2){ball.pos.x, ball.pos.y},
-                                            ball.radius, enemy)) {
+                                            ball.radius, bricks[i][j].rect)) {
                     if (bricks[i][j].alive == true) {
                         score += 1;
-                        ball.speed.y *= -1;
+                        ball.velocity.y *= -1;
                         bricks[i][j].alive = false;
                     }
                 }
@@ -164,12 +154,12 @@ void update_game(void)
 
 void init_bricks(void)
 {
-    for (int i = 0; i < ROWS; ++i) {
-        for (int j = 0; j < COLS; ++j) {
-            bricks[i][j].pos =
-                (Vector2){ball.radius * 3 + j * BRICK_WIDTH + j * 5,
-                          ball.radius * 3 + i * BRICK_HEIGHT + i * 5};
-            bricks[i][j].size = (Vector2){BRICK_WIDTH, BRICK_HEIGHT};
+    for (int i = 0; i < BRICK_ROWS; ++i) {
+        for (int j = 0; j < BRICK_COLS; ++j) {
+            bricks[i][j].rect.x = ball.radius * 3 + j * BRICK_WIDTH + j * 5;
+            bricks[i][j].rect.y = ball.radius * 3 + i * BRICK_HEIGHT + i * 5;
+            bricks[i][j].rect.width = BRICK_WIDTH;
+            bricks[i][j].rect.height = BRICK_HEIGHT;
             bricks[i][j].alive = true;
         }
     }
@@ -182,17 +172,19 @@ void draw_game(void)
     ClearBackground(BLACK);
 
     // draw enemy bricks
-    for (int i = 0; i < ROWS; ++i) {
-        for (int j = 0; j < COLS; ++j) {
+    for (int i = 0; i < BRICK_ROWS; ++i) {
+        for (int j = 0; j < BRICK_COLS; ++j) {
             if (bricks[i][j].alive == true) {
-                DrawRectangleV(bricks[i][j].pos, bricks[i][j].size, RAYWHITE);
+                DrawRectangle(bricks[i][j].rect.x, bricks[i][j].rect.y,
+                              bricks[i][j].rect.width, bricks[i][j].rect.height,
+                              RAYWHITE);
             }
         }
     }
 
     // draw player tile
-    DrawRectangleV(player.pos, (Vector2){player.size.x, player.size.y},
-                   RAYWHITE);
+    DrawRectangle(player.rect.x, player.rect.y, player.rect.width,
+                  player.rect.height, RAYWHITE);
 
     // draw ball
     DrawCircleV(ball.pos, ball.radius, RAYWHITE);
