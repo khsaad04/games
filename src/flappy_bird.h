@@ -1,4 +1,5 @@
 #ifndef FLAPPY_BIRD_H
+#define FLAPPY_BIRD_H
 
 #include <raylib.h>
 
@@ -12,7 +13,7 @@
 #define PILLAR_GAP (10 * BIRD_RADIUS)
 #define PILLAR_PADDING ((SCREEN_WIDTH - 2 * PILLAR_WIDTH) / 2)
 
-typedef enum State { STANDBY, RUNNING, PAUSED, OVER } State;
+typedef enum { STANDBY, RUNNING, PAUSED, OVER } State;
 
 typedef struct {
     Vector2 pos, radius;

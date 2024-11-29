@@ -19,7 +19,7 @@
 #define BRICK_HEIGHT (SCREEN_HEIGHT / BRICK_ROWS / 3)
 #define FONT_SIZE (20 * SCALE)
 
-typedef enum State { STANDBY, RUNNING, PAUSED, OVER } State;
+typedef enum { STANDBY, RUNNING, PAUSED, OVER } State;
 
 typedef struct {
     Rectangle rect;
