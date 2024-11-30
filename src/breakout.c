@@ -85,11 +85,12 @@ void update_game(void)
             ball.accel.y * copysignf(1.0, ball.velocity.y) * GetFrameTime();
 
         // ball-wall collision
-        if (ball.pos.x > SCREEN_WIDTH || ball.pos.x < 0) {
+        if (ball.pos.x + ball.radius > SCREEN_WIDTH ||
+            ball.pos.x < ball.radius) {
             ball.velocity.x *= -1;
         }
 
-        if (ball.pos.y < 0) {
+        if (ball.pos.y < ball.radius) {
             ball.velocity.y *= -1;
         }
 
