@@ -103,10 +103,10 @@ void update_game(void)
             ball.pos.y = player.rect.y - ball.radius;
             ball.velocity.y *= -1;
 
-            float player_center = player.rect.x + player.rect.width / 2;
-            float ball_dx_from_center = ball.pos.x - player_center;
+            float ball_dx_from_center =
+                ball.pos.x - player.rect.x + player.rect.width / 2;
             float normalized_ball_dx_from_center =
-                ball_dx_from_center / (player.rect.width / 2);
+                fminf(1, ball_dx_from_center / (player.rect.width / 2));
             ball.velocity.x = BALL_SPEED * normalized_ball_dx_from_center;
 
             if (player.velocity < 0 && ball.velocity.x > 0) {
