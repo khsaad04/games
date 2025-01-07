@@ -1,5 +1,5 @@
-#ifndef BREAKOUT_H
-#define BREAKOUT_H
+#ifndef BREAKOUT_H_
+#define BREAKOUT_H_
 
 #include <raylib.h>
 
@@ -47,4 +47,4 @@ void init_bricks(void);
 void update_game(void);
 void draw_game(void);
 
-#endif // BREAKOUT_H
+#endif // BREAKOUT_H_

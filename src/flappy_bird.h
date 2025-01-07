@@ -1,5 +1,5 @@
-#ifndef FLAPPY_BIRD_H
-#define FLAPPY_BIRD_H
+#ifndef FLAPPY_BIRD_H_
+#define FLAPPY_BIRD_H_
 
 #include <raylib.h>
 
@@ -38,4 +38,4 @@ void init_game(void);
 void update_game(void);
 void draw_game(void);
 
-#endif // FLAPPY_BIRD_H
+#endif // FLAPPY_BIRD_H_

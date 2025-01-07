@@ -1,4 +1,5 @@
-#ifndef SNAKE_H
+#ifndef SNAKE_H_
+#define SNAKE_H_
 
 #include <raylib.h>
 
@@ -8,10 +9,8 @@
 
 #define SNAKE_COLOR BLUE
 #define APPLE_COLOR RED
-#define BG1                                                                    \
-    (Color) { 20, 20, 20, 255 }
-#define BG2                                                                    \
-    (Color) { 10, 10, 10, 255 }
+#define BG1 (Color){20, 20, 20, 255}
+#define BG2 (Color){10, 10, 10, 255}
 
 #else
 
@@ -59,4 +58,4 @@ void update_game(void);
 Vector2 get_random_apple_pos(void);
 void draw_game(void);
 
-#endif // SNAKE_H
+#endif // SNAKE_H_

@@ -147,8 +147,7 @@ void draw_game(void)
     for (int i = 0; i < ROWS; ++i) {
         for (int j = 0; j < COLS; ++j) {
             if ((i + j) % 2 == 0) {
-                DrawRectangleV((Vector2){offset.x / 2 + j * CELL_SIZE,
-                                         offset.y / 2 + i * CELL_SIZE},
+                DrawRectangleV((Vector2){j * CELL_SIZE, i * CELL_SIZE},
                                (Vector2){CELL_SIZE, CELL_SIZE}, BG2);
             }
         }

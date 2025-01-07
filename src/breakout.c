@@ -1,6 +1,7 @@
 #include "breakout.h"
 #include <math.h>
 #include <raylib.h>
+#include <raymath.h>
 
 int main(void)
 {
@@ -48,23 +49,18 @@ void update_game(void)
         break;
     case RUNNING:
         // pause game
-        if (IsKeyPressed(KEY_P) || IsKeyPressed(KEY_SPACE)) {
+        if (IsKeyPressed(KEY_P)) {
             game = PAUSED;
         }
 
         // player control
         if (IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A)) {
-            if (player.velocity > 0) {
-                player.velocity *= -1;
-            }
+            player.velocity = -fabsf(player.velocity);
             player.rect.x += player.velocity * GetFrameTime();
         }
 
         if (IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_D)) {
-            game = RUNNING;
-            if (player.velocity < 0) {
-                player.velocity *= -1;
-            }
+            player.velocity = fabsf(player.velocity);
             player.rect.x += player.velocity * GetFrameTime();
         }
 
@@ -78,11 +74,10 @@ void update_game(void)
         }
 
         // ball movement
-        ball.pos.x += ball.velocity.x * GetFrameTime();
-        ball.pos.y += ball.velocity.y * GetFrameTime();
-
-        ball.velocity.y +=
-            ball.accel.y * copysignf(1.0, ball.velocity.y) * GetFrameTime();
+        ball.pos =
+            Vector2Add(ball.pos, Vector2Scale(ball.velocity, GetFrameTime()));
+        ball.velocity =
+            Vector2Add(ball.velocity, Vector2Scale(ball.accel, GetFrameTime()));
 
         // ball-wall collision
         if (ball.pos.x + ball.radius > SCREEN_WIDTH ||
@@ -145,13 +140,13 @@ void update_game(void)
         break;
     case PAUSED:
         // unpause game
-        if (IsKeyPressed(KEY_P) || IsKeyPressed(KEY_SPACE)) {
+        if (IsKeyPressed(KEY_P)) {
             game = RUNNING;
         }
         break;
     case OVER:
         // restart game
-        if (IsKeyPressed(KEY_SPACE)) {
+        if (IsKeyPressed(KEY_ENTER)) {
             init_game();
         }
         break;
@@ -181,16 +176,13 @@ void draw_game(void)
     for (int i = 0; i < BRICK_ROWS; ++i) {
         for (int j = 0; j < BRICK_COLS; ++j) {
             if (!bricks[i][j].hit) {
-                DrawRectangle(bricks[i][j].rect.x, bricks[i][j].rect.y,
-                              bricks[i][j].rect.width, bricks[i][j].rect.height,
-                              RAYWHITE);
+                DrawRectangleRec(bricks[i][j].rect, RAYWHITE);
             }
         }
     }
 
     // draw player tile
-    DrawRectangle(player.rect.x, player.rect.y, player.rect.width,
-                  player.rect.height, RAYWHITE);
+    DrawRectangleRec(player.rect, RAYWHITE);
 
     // draw ball
     DrawCircleV(ball.pos, ball.radius, RAYWHITE);
@@ -207,7 +199,7 @@ void draw_game(void)
                  FONT_SIZE, RAYWHITE);
         break;
     case PAUSED:
-        text = "Press P/<space> to resume";
+        text = "Paused";
         DrawText(text,
                  SCREEN_WIDTH / 2 - MeasureText(text, FONT_SIZE * 3 / 2) / 2.0,
                  SCREEN_HEIGHT * .55, FONT_SIZE * 3 / 2, RAYWHITE);
@@ -221,7 +213,7 @@ void draw_game(void)
         DrawText(text,
                  SCREEN_WIDTH / 2 - MeasureText(text, FONT_SIZE * 3 / 2) / 2.0,
                  SCREEN_HEIGHT * .65, FONT_SIZE * 3 / 2, RAYWHITE);
-        text = "Press <space> to restart";
+        text = "Press <enter> to restart";
         DrawText(text,
                  SCREEN_WIDTH / 2 - MeasureText(text, FONT_SIZE * 3 / 2) / 2.0,
                  SCREEN_HEIGHT * .75, FONT_SIZE * 3 / 2, RAYWHITE);
