@@ -1,6 +1,41 @@
-#include "flappy_bird.h"
 #include <raylib.h>
 #include <stdlib.h>
+
+#define SCALE 1.0
+#define SCREEN_WIDTH (800 * SCALE)
+#define SCREEN_HEIGHT (600 * SCALE)
+#define FPS 60
+#define BIRD_RADIUS (20 * SCALE)
+#define GRAVITY (30 * SCALE)
+#define PILLAR_WIDTH (5 * BIRD_RADIUS)
+#define PILLAR_GAP (10 * BIRD_RADIUS)
+#define PILLAR_PADDING ((SCREEN_WIDTH - 2 * PILLAR_WIDTH) / 2)
+#define PILLAR_VELOCITY (200 * SCALE)
+
+typedef enum { STANDBY, RUNNING, PAUSED, OVER } State;
+
+typedef struct {
+    Vector2 pos, radius;
+    Color color;
+} Bird;
+
+typedef struct {
+    Vector2 pos;
+    bool passed;
+} Pillar;
+
+static State game = STANDBY;
+static int score = 0;
+static Bird bird = {0};
+static float bird_velocity = 0;
+static Pillar pillars[3] = {0};
+static float pillar_velocity = PILLAR_VELOCITY;
+static float pillar_accel = 1;
+
+float random_piller_y(void);
+void init_game(void);
+void update_game(void);
+void draw_game(void);
 
 int main(void)
 {
@@ -29,7 +64,7 @@ void init_game(void)
     bird.color = RAYWHITE;
 
     pillar_accel = 1;
-    pillar_velocity = 200 * SCALE;
+    pillar_velocity = PILLAR_VELOCITY;
     for (int i = 0; i < 3; ++i) {
         pillars[i].pos =
             (Vector2){SCREEN_WIDTH + i * PILLAR_PADDING, random_piller_y()};
@@ -54,8 +89,8 @@ void update_game(void)
         break;
     case RUNNING:
         bird.pos.y += bird_velocity;
-        bird.radius.y -= bird_velocity * .0075;
-        bird.radius.x += bird_velocity * .0075;
+        bird.radius.y -= bird_velocity * .01;
+        bird.radius.x += bird_velocity * .01;
         bird_velocity += GRAVITY * GetFrameTime();
 
         pillar_velocity += pillar_accel * GetFrameTime();

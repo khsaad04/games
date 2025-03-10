@@ -1,7 +1,50 @@
-#include "breakout.h"
 #include <math.h>
 #include <raylib.h>
 #include <raymath.h>
+
+#define SCALE 1.0
+#define SCREEN_WIDTH (800 * SCALE)
+#define SCREEN_HEIGHT (600 * SCALE)
+#define FPS 60
+#define PLAYER_WIDTH (100 * SCALE)
+#define PLAYER_HEIGHT (20 * SCALE)
+#define PLAYER_SPEED (900 * SCALE)
+#define BALL_RADIUS (10 * SCALE)
+#define BALL_SPEED (300 * SCALE)
+#define BALL_ACCEL (3 * SCALE)
+#define BRICK_ROWS 10
+#define BRICK_COLS 10
+#define BRICK_WIDTH (SCREEN_WIDTH / BRICK_COLS - 5 * SCALE)
+#define BRICK_HEIGHT (SCREEN_HEIGHT / BRICK_ROWS / 3)
+#define FONT_SIZE (20 * SCALE)
+
+typedef enum { STANDBY, RUNNING, PAUSED, OVER } State;
+
+typedef struct {
+    Rectangle rect;
+    float velocity;
+} Player;
+
+typedef struct {
+    Vector2 pos, velocity, accel;
+    float radius;
+} Ball;
+
+typedef struct {
+    Rectangle rect;
+    bool hit;
+} Bricks;
+
+static State game = STANDBY;
+static int score = 0;
+static Player player = {0};
+static Ball ball = {0};
+static Bricks bricks[BRICK_ROWS][BRICK_COLS] = {0};
+
+void init_game(void);
+void init_bricks(void);
+void update_game(void);
+void draw_game(void);
 
 int main(void)
 {
@@ -36,6 +79,19 @@ void init_game(void)
     ball.radius = BALL_RADIUS;
 
     init_bricks();
+}
+
+void init_bricks(void)
+{
+    for (int i = 0; i < BRICK_ROWS; ++i) {
+        for (int j = 0; j < BRICK_COLS; ++j) {
+            bricks[i][j].rect.x = 2.5 + j * BRICK_WIDTH + j * 5;
+            bricks[i][j].rect.y = 2.5 + i * BRICK_HEIGHT + i * 5;
+            bricks[i][j].rect.width = BRICK_WIDTH;
+            bricks[i][j].rect.height = BRICK_HEIGHT;
+            bricks[i][j].hit = false;
+        }
+    }
 }
 
 void update_game(void)
@@ -123,11 +179,10 @@ void update_game(void)
                             ball.pos.x - ball.radius >
                                 bricks[i][j].rect.x + bricks[i][j].rect.width) {
                             ball.velocity.x *= -1;
-                        }
-                        else {
+                        } else {
                             ball.velocity.y *= -1;
                         }
-                        bricks[i][j].hit = 1;
+                        bricks[i][j].hit = true;
                     }
                 }
             }
@@ -150,19 +205,6 @@ void update_game(void)
             init_game();
         }
         break;
-    }
-}
-
-void init_bricks(void)
-{
-    for (int i = 0; i < BRICK_ROWS; ++i) {
-        for (int j = 0; j < BRICK_COLS; ++j) {
-            bricks[i][j].rect.x = 2.5 + j * BRICK_WIDTH + j * 5;
-            bricks[i][j].rect.y = 2.5 + i * BRICK_HEIGHT + i * 5;
-            bricks[i][j].rect.width = BRICK_WIDTH;
-            bricks[i][j].rect.height = BRICK_HEIGHT;
-            bricks[i][j].hit = 0;
-        }
     }
 }
 
