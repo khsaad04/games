@@ -1,34 +1,39 @@
 #define NOB_IMPLEMENTATION
+#define NOB_STRIP_PREFIX
 #include "nob.h"
 
 #define BUILD_FOLDER "build/"
 #define SRC_FOLDER "src/"
-#define RAYLIB_INCLUDE_FOLDER "raylib-5.5_linux_amd64/include/"
-#define RAYLIB_LIB_FOLDER "raylib-5.5_linux_amd64/lib/"
+#define RAYLIB_FOLDER "raylib-5.5_linux_amd64/"
 
-bool build_game(Nob_Cmd *cmd, char *name)
+void build_game(Cmd *cmd, Procs *procs, char *name)
 {
-    nob_cmd_append( cmd, "cc",
+    cmd_append(
+        cmd, "cc",
         "-Wall", "-Wextra", "-ggdb", "-O3",
-        "-I./"RAYLIB_INCLUDE_FOLDER,
-        "-o", nob_temp_sprintf("%s%s", BUILD_FOLDER, name),
-        nob_temp_sprintf("%s%s.c", SRC_FOLDER, name),
-        "-L./"RAYLIB_LIB_FOLDER, "-l:libraylib.a", "-lm");
+        "-I./"RAYLIB_FOLDER"include",
+        "-o", temp_sprintf("%s%s", BUILD_FOLDER, name),
+        temp_sprintf("%s%s.c", SRC_FOLDER, name),
+        "-L./"RAYLIB_FOLDER"lib", "-l:libraylib.a", "-lm"
+    );
 
-    if (!nob_cmd_run_sync_and_reset(cmd)) return false;
-    return true;
+    da_append(procs, cmd_run_async_and_reset(cmd));
 }
 
 int main(int argc, char **argv)
 {
     NOB_GO_REBUILD_URSELF(argc, argv);
 
-    if (!nob_mkdir_if_not_exists(BUILD_FOLDER)) return 1;
+    if (!mkdir_if_not_exists(BUILD_FOLDER)) return 1;
 
-    Nob_Cmd cmd = {0};
-    build_game(&cmd, "breakout");
-    build_game(&cmd, "flappy_bird");
-    build_game(&cmd, "snake");
+    Cmd cmd = {0};
+    Procs procs = {0};
+
+    build_game(&cmd, &procs, "breakout");
+    build_game(&cmd, &procs, "flappy_bird");
+    build_game(&cmd, &procs, "snake");
+
+    if (!procs_wait_and_reset(&procs)) return 1;
 
     return 0;
 }
