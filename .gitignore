@@ -1,3 +1,5 @@
 .direnv/
-bin/
+build/
 result
+nob
+nob.old
