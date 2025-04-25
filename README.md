@@ -1,3 +1,7 @@
+# Games
+I made this to learn how to use raylib and also because making games is fun.
+
+## Preview
 <table>
   <tr>
     <td>Breakout</td>
@@ -10,3 +14,13 @@
     <td><img src="assets/snake.png"></td>
   </tr>
 </table>
+
+## Quickstart
+```console
+$ cc -o nob nob.c
+$ ./nob
+```
+All the binaries will be in `build/` directory. Just run one from there. For example:
+```console
+$ ./build/breakout
+```
