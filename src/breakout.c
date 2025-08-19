@@ -1,97 +1,79 @@
 #include <math.h>
 #include <raylib.h>
 #include <raymath.h>
+#include <stdio.h>
 
-#define SCALE 1.0
-#define SCREEN_WIDTH (800 * SCALE)
-#define SCREEN_HEIGHT (600 * SCALE)
+#define SCREEN_WIDTH GetScreenWidth()
+#define SCREEN_HEIGHT GetScreenHeight()
 #define FPS 60
-#define PLAYER_WIDTH (100 * SCALE)
-#define PLAYER_HEIGHT (20 * SCALE)
-#define PLAYER_SPEED (900 * SCALE)
-#define BALL_RADIUS (10 * SCALE)
-#define BALL_SPEED (300 * SCALE)
-#define BALL_ACCEL (3 * SCALE)
+#define PLAYER_WIDTH (100.0 * SCREEN_WIDTH / 800.0)
+#define PLAYER_HEIGHT (20.0 * SCREEN_HEIGHT / 600.0)
+#define PLAYER_SPEED (900.0 * SCREEN_WIDTH / 800.0)
+#define BALL_RADIUS (10.0 * SCREEN_WIDTH / 800.0)
+#define BALL_SPEED (300.0 * SCREEN_WIDTH / 800.0)
+#define BALL_ACCEL (3.0 * SCREEN_WIDTH / 800.0)
 #define BRICK_ROWS 10
 #define BRICK_COLS 10
-#define BRICK_WIDTH (SCREEN_WIDTH / BRICK_COLS - 5 * SCALE)
-#define BRICK_HEIGHT (SCREEN_HEIGHT / BRICK_ROWS / 3)
-#define FONT_SIZE (20 * SCALE)
+#define BRICK_PADDING (5.0 * SCREEN_WIDTH / 800.0)
+#define BRICK_WIDTH (SCREEN_WIDTH / BRICK_COLS - BRICK_PADDING)
+#define BRICK_HEIGHT (SCREEN_HEIGHT / BRICK_ROWS / 3.0)
+#define FONT_SIZE (20.0 * SCREEN_HEIGHT / 600.0)
 
 typedef enum { STANDBY, RUNNING, PAUSED, OVER } State;
 
 typedef struct {
     Rectangle rect;
-    float velocity;
+    float     velocity;
 } Player;
 
 typedef struct {
-    Vector2 pos, velocity, accel;
-    float radius;
+    Vector2   pos, velocity, accel;
+    float     radius;
+    bool      alive;
 } Ball;
 
 typedef struct {
     Rectangle rect;
-    bool hit;
+    bool      hit;
 } Bricks;
 
-static State game = STANDBY;
-static int score = 0;
-static Player player = {0};
-static Ball ball = {0};
-static Bricks bricks[BRICK_ROWS][BRICK_COLS] = {0};
-
-void init_game(void);
-void init_bricks(void);
-void update_game(void);
-void draw_game(void);
-
-int main(void)
-{
-    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Breakout");
-    SetTargetFPS(FPS);
-
-    init_game();
-
-    while (!WindowShouldClose()) {
-        update_game();
-        draw_game();
-    }
-
-    CloseWindow();
-    return 0;
-}
-
-void init_game(void)
-{
-    score = 0;
-    game = STANDBY;
-
-    player.rect = (Rectangle){.x = SCREEN_WIDTH / 2.0 - PLAYER_WIDTH / 2.0,
-                              .y = SCREEN_HEIGHT - SCREEN_HEIGHT * 0.1,
-                              .width = PLAYER_WIDTH,
-                              .height = PLAYER_HEIGHT};
-    player.velocity = PLAYER_SPEED;
-
-    ball.pos = (Vector2){SCREEN_WIDTH / 2.0, 2.0 * SCREEN_HEIGHT / 3.0};
-    ball.velocity = (Vector2){BALL_SPEED, -BALL_SPEED};
-    ball.accel = (Vector2){BALL_ACCEL, BALL_ACCEL};
-    ball.radius = BALL_RADIUS;
-
-    init_bricks();
-}
+State  game   = STANDBY;
+int    score  = 0;
+Player player = {0};
+Ball   ball   = {0};
+Bricks bricks[BRICK_ROWS][BRICK_COLS] = {0};
 
 void init_bricks(void)
 {
     for (int i = 0; i < BRICK_ROWS; ++i) {
         for (int j = 0; j < BRICK_COLS; ++j) {
-            bricks[i][j].rect.x = 2.5 + j * BRICK_WIDTH + j * 5;
-            bricks[i][j].rect.y = 2.5 + i * BRICK_HEIGHT + i * 5;
-            bricks[i][j].rect.width = BRICK_WIDTH;
+            bricks[i][j].rect.x      = BRICK_PADDING * 0.5 + j * BRICK_WIDTH  + j * BRICK_PADDING;
+            bricks[i][j].rect.y      = BRICK_PADDING * 0.5 + i * BRICK_HEIGHT + i * BRICK_PADDING;
+            bricks[i][j].rect.width  = BRICK_WIDTH;
             bricks[i][j].rect.height = BRICK_HEIGHT;
-            bricks[i][j].hit = false;
+            bricks[i][j].hit         = false;
         }
     }
+}
+
+void init_game(void)
+{
+    score = 0;
+    game  = STANDBY;
+
+    player.rect = (Rectangle){.x      = SCREEN_WIDTH / 2.0 - PLAYER_WIDTH / 2.0,
+                              .y      = SCREEN_HEIGHT - SCREEN_HEIGHT * 0.1,
+                              .width  = PLAYER_WIDTH,
+                              .height = PLAYER_HEIGHT};
+    player.velocity = PLAYER_SPEED;
+
+    ball.pos      = (Vector2){SCREEN_WIDTH / 2.0, 2.0 * SCREEN_HEIGHT / 3.0};
+    ball.velocity = (Vector2){BALL_SPEED, -BALL_SPEED};
+    ball.accel    = (Vector2){BALL_ACCEL, BALL_ACCEL};
+    ball.radius   = BALL_RADIUS;
+    ball.alive    = true;
+
+    init_bricks();
 }
 
 void update_game(void)
@@ -130,10 +112,8 @@ void update_game(void)
         }
 
         // ball movement
-        ball.pos =
-            Vector2Add(ball.pos, Vector2Scale(ball.velocity, GetFrameTime()));
-        ball.velocity =
-            Vector2Add(ball.velocity, Vector2Scale(ball.accel, GetFrameTime()));
+        ball.pos      = Vector2Add(ball.pos,      Vector2Scale(ball.velocity, GetFrameTime()));
+        ball.velocity = Vector2Add(ball.velocity, Vector2Scale(ball.accel,    GetFrameTime()));
 
         // ball-wall collision
         if (ball.pos.x + ball.radius > SCREEN_WIDTH ||
@@ -146,7 +126,8 @@ void update_game(void)
         }
 
         if (ball.pos.y > SCREEN_HEIGHT + ball.radius) {
-            game = OVER;
+            ball.alive = false;
+            game       = OVER;
         }
 
         // ball-player collision
@@ -154,10 +135,8 @@ void update_game(void)
             ball.pos.y = player.rect.y - ball.radius;
             ball.velocity.y *= -1;
 
-            float ball_dx_from_center =
-                ball.pos.x - player.rect.x + player.rect.width / 2;
-            float normalized_ball_dx_from_center =
-                fminf(1, ball_dx_from_center / (player.rect.width / 2));
+            float ball_dx_from_center = ball.pos.x - player.rect.x + player.rect.width / 2;
+            float normalized_ball_dx_from_center = fminf(1, ball_dx_from_center / (player.rect.width / 2));
             ball.velocity.x = BALL_SPEED * normalized_ball_dx_from_center;
 
             if (player.velocity < 0 && ball.velocity.x > 0) {
@@ -206,6 +185,29 @@ void update_game(void)
         }
         break;
     }
+
+    // handle window resize events
+    if (IsWindowResized()) {
+        player.rect.x      = SCREEN_WIDTH / 2.0 - PLAYER_WIDTH / 2.0;
+        player.rect.y      = SCREEN_HEIGHT - SCREEN_HEIGHT * 0.1;
+        player.rect.width  = PLAYER_WIDTH;
+        player.rect.height = PLAYER_HEIGHT;
+        player.velocity    = PLAYER_SPEED;
+
+        ball.pos      = (Vector2){SCREEN_WIDTH / 2.0, 2.0 * SCREEN_HEIGHT / 3.0};
+        ball.radius   = BALL_RADIUS;
+        ball.velocity = (Vector2){BALL_SPEED, -BALL_SPEED};
+        ball.accel    = (Vector2){BALL_ACCEL, BALL_ACCEL};
+
+        for (int i = 0; i < BRICK_ROWS; ++i) {
+            for (int j = 0; j < BRICK_COLS; ++j) {
+                bricks[i][j].rect.x      = BRICK_PADDING * 0.5 + j * BRICK_WIDTH  + j * BRICK_PADDING;
+                bricks[i][j].rect.y      = BRICK_PADDING * 0.5 + i * BRICK_HEIGHT + i * BRICK_PADDING;
+                bricks[i][j].rect.width  = BRICK_WIDTH;
+                bricks[i][j].rect.height = BRICK_HEIGHT;
+            }
+        }
+    }
 }
 
 void draw_game(void)
@@ -227,40 +229,60 @@ void draw_game(void)
     DrawRectangleRec(player.rect, RAYWHITE);
 
     // draw ball
-    DrawCircleV(ball.pos, ball.radius, RAYWHITE);
+    if (ball.alive) DrawCircleV(ball.pos, ball.radius, RAYWHITE);
 
     const char *text;
     switch (game) {
-    case STANDBY:
-        text = "Press <space> to start";
-        DrawText(text, SCREEN_WIDTH / 2 - MeasureText(text, FONT_SIZE) / 2.0,
-                 SCREEN_HEIGHT * .75, FONT_SIZE, RAYWHITE);
-        break;
-    case RUNNING:
-        DrawText(TextFormat("Score: %d", score), 20, SCREEN_HEIGHT - 25,
-                 FONT_SIZE, RAYWHITE);
-        break;
-    case PAUSED:
-        text = "Paused";
-        DrawText(text,
-                 SCREEN_WIDTH / 2 - MeasureText(text, FONT_SIZE * 3 / 2) / 2.0,
-                 SCREEN_HEIGHT * .55, FONT_SIZE * 3 / 2, RAYWHITE);
-        break;
-    case OVER:
-        text = "GAME OVER";
-        DrawText(text,
-                 SCREEN_WIDTH / 2 - MeasureText(text, FONT_SIZE * 3 / 2) / 2.0,
-                 SCREEN_HEIGHT * .55, FONT_SIZE * 3 / 2, RAYWHITE);
-        text = TextFormat("Score: %d", score);
-        DrawText(text,
-                 SCREEN_WIDTH / 2 - MeasureText(text, FONT_SIZE * 3 / 2) / 2.0,
-                 SCREEN_HEIGHT * .65, FONT_SIZE * 3 / 2, RAYWHITE);
-        text = "Press <enter> to restart";
-        DrawText(text,
-                 SCREEN_WIDTH / 2 - MeasureText(text, FONT_SIZE * 3 / 2) / 2.0,
-                 SCREEN_HEIGHT * .75, FONT_SIZE * 3 / 2, RAYWHITE);
-        break;
+        case STANDBY: {
+            text = "Press <space> to start";
+            DrawText(text, SCREEN_WIDTH / 2 - MeasureText(text, FONT_SIZE) / 2.0,
+                     SCREEN_HEIGHT * .75, FONT_SIZE, RAYWHITE);
+        } break;
+
+        case RUNNING: {
+            DrawText(TextFormat("Score: %d", score), 20, SCREEN_HEIGHT - 25,
+                     FONT_SIZE, RAYWHITE);
+        } break;
+
+        case PAUSED: {
+            text = "Paused";
+            DrawText(text,
+                     SCREEN_WIDTH / 2 - MeasureText(text, FONT_SIZE * 3 / 2) / 2.0,
+                     SCREEN_HEIGHT * .55, FONT_SIZE * 3 / 2, RAYWHITE);
+        } break;
+
+        case OVER: {
+            text = "GAME OVER";
+            DrawText(text,
+                     SCREEN_WIDTH / 2 - MeasureText(text, FONT_SIZE * 3 / 2) / 2.0,
+                     SCREEN_HEIGHT * .55, FONT_SIZE * 3 / 2, RAYWHITE);
+            text = TextFormat("Score: %d", score);
+            DrawText(text,
+                     SCREEN_WIDTH / 2 - MeasureText(text, FONT_SIZE * 3 / 2) / 2.0,
+                     SCREEN_HEIGHT * .65, FONT_SIZE * 3 / 2, RAYWHITE);
+            text = "Press <enter> to restart";
+            DrawText(text,
+                     SCREEN_WIDTH / 2 - MeasureText(text, FONT_SIZE * 3 / 2) / 2.0,
+                     SCREEN_HEIGHT * .75, FONT_SIZE * 3 / 2, RAYWHITE);
+        } break;
     }
 
     EndDrawing();
+}
+
+int main(void)
+{
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
+    InitWindow(800, 600, "Breakout");
+    SetTargetFPS(FPS);
+
+    init_game();
+
+    while (!WindowShouldClose()) {
+        update_game();
+        draw_game();
+    }
+
+    CloseWindow();
+    return 0;
 }
