@@ -1,7 +1,6 @@
 #include <math.h>
 #include <raylib.h>
 #include <raymath.h>
-#include <stdio.h>
 
 #define SCREEN_WIDTH GetScreenWidth()
 #define SCREEN_HEIGHT GetScreenHeight()
@@ -37,7 +36,7 @@ typedef struct {
     bool      hit;
 } Bricks;
 
-State  game   = STANDBY;
+State  state  = STANDBY;
 int    score  = 0;
 Player player = {0};
 Ball   ball   = {0};
@@ -59,7 +58,7 @@ void init_bricks(void)
 void init_game(void)
 {
     score = 0;
-    game  = STANDBY;
+    state = STANDBY;
 
     player.rect = (Rectangle){.x      = SCREEN_WIDTH / 2.0 - PLAYER_WIDTH / 2.0,
                               .y      = SCREEN_HEIGHT - SCREEN_HEIGHT * 0.1,
@@ -78,17 +77,17 @@ void init_game(void)
 
 void update_game(void)
 {
-    switch (game) {
+    switch (state) {
     case STANDBY:
         // start game
         if (IsKeyPressed(KEY_SPACE)) {
-            game = RUNNING;
+            state = RUNNING;
         }
         break;
     case RUNNING:
         // pause game
         if (IsKeyPressed(KEY_P)) {
-            game = PAUSED;
+            state = PAUSED;
         }
 
         // player control
@@ -127,7 +126,7 @@ void update_game(void)
 
         if (ball.pos.y > SCREEN_HEIGHT + ball.radius) {
             ball.alive = false;
-            game       = OVER;
+            state      = OVER;
         }
 
         // ball-player collision
@@ -175,7 +174,7 @@ void update_game(void)
     case PAUSED:
         // unpause game
         if (IsKeyPressed(KEY_P)) {
-            game = RUNNING;
+            state = RUNNING;
         }
         break;
     case OVER:
@@ -232,39 +231,39 @@ void draw_game(void)
     if (ball.alive) DrawCircleV(ball.pos, ball.radius, RAYWHITE);
 
     const char *text;
-    switch (game) {
-        case STANDBY: {
-            text = "Press <space> to start";
-            DrawText(text, SCREEN_WIDTH / 2 - MeasureText(text, FONT_SIZE) / 2.0,
-                     SCREEN_HEIGHT * .75, FONT_SIZE, RAYWHITE);
-        } break;
+    switch (state) {
+    case STANDBY:
+        text = "Press <space> to start";
+        DrawText(text, SCREEN_WIDTH / 2 - MeasureText(text, FONT_SIZE) / 2.0,
+                 SCREEN_HEIGHT * .75, FONT_SIZE, RAYWHITE);
+        break;
 
-        case RUNNING: {
-            DrawText(TextFormat("Score: %d", score), 20, SCREEN_HEIGHT - 25,
-                     FONT_SIZE, RAYWHITE);
-        } break;
+    case RUNNING:
+        DrawText(TextFormat("Score: %d", score), 20, SCREEN_HEIGHT - 25,
+                 FONT_SIZE, RAYWHITE);
+        break;
 
-        case PAUSED: {
-            text = "Paused";
-            DrawText(text,
-                     SCREEN_WIDTH / 2 - MeasureText(text, FONT_SIZE * 3 / 2) / 2.0,
-                     SCREEN_HEIGHT * .55, FONT_SIZE * 3 / 2, RAYWHITE);
-        } break;
+    case PAUSED:
+        text = "Paused";
+        DrawText(text,
+                 SCREEN_WIDTH / 2 - MeasureText(text, FONT_SIZE * 3 / 2) / 2.0,
+                 SCREEN_HEIGHT * .55, FONT_SIZE * 3 / 2, RAYWHITE);
+        break;
 
-        case OVER: {
-            text = "GAME OVER";
-            DrawText(text,
-                     SCREEN_WIDTH / 2 - MeasureText(text, FONT_SIZE * 3 / 2) / 2.0,
-                     SCREEN_HEIGHT * .55, FONT_SIZE * 3 / 2, RAYWHITE);
-            text = TextFormat("Score: %d", score);
-            DrawText(text,
-                     SCREEN_WIDTH / 2 - MeasureText(text, FONT_SIZE * 3 / 2) / 2.0,
-                     SCREEN_HEIGHT * .65, FONT_SIZE * 3 / 2, RAYWHITE);
-            text = "Press <enter> to restart";
-            DrawText(text,
-                     SCREEN_WIDTH / 2 - MeasureText(text, FONT_SIZE * 3 / 2) / 2.0,
-                     SCREEN_HEIGHT * .75, FONT_SIZE * 3 / 2, RAYWHITE);
-        } break;
+    case OVER:
+        text = "GAME OVER";
+        DrawText(text,
+                 SCREEN_WIDTH / 2 - MeasureText(text, FONT_SIZE * 3 / 2) / 2.0,
+                 SCREEN_HEIGHT * .55, FONT_SIZE * 3 / 2, RAYWHITE);
+        text = TextFormat("Score: %d", score);
+        DrawText(text,
+                 SCREEN_WIDTH / 2 - MeasureText(text, FONT_SIZE * 3 / 2) / 2.0,
+                 SCREEN_HEIGHT * .65, FONT_SIZE * 3 / 2, RAYWHITE);
+        text = "Press <enter> to restart";
+        DrawText(text,
+                 SCREEN_WIDTH / 2 - MeasureText(text, FONT_SIZE * 3 / 2) / 2.0,
+                 SCREEN_HEIGHT * .75, FONT_SIZE * 3 / 2, RAYWHITE);
+        break;
     }
 
     EndDrawing();
