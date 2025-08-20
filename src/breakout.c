@@ -36,11 +36,11 @@ typedef struct {
     bool      hit;
 } Bricks;
 
-State  state  = STANDBY;
-int    score  = 0;
-Player player = {0};
-Ball   ball   = {0};
-Bricks bricks[BRICK_ROWS][BRICK_COLS] = {0};
+State  state;
+int    score;
+Player player;
+Ball   ball;
+Bricks bricks[BRICK_ROWS][BRICK_COLS];
 
 void init_bricks(void)
 {
@@ -167,8 +167,7 @@ void update_game(void)
         }
 
         // reset bricks
-        if (fmodf(score, 100) == 0)
-            init_bricks();
+        if (fmodf(score, 100) == 0) init_bricks();
 
         break;
     case PAUSED:
