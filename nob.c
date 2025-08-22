@@ -9,9 +9,9 @@
 #define SRC_PATH "src/"
 #define RAYLIB_PATH "raylib-5.5_linux_amd64/"
 
-typedef enum { DEBUG, RELEASE } BuildType;
+typedef enum { DEBUG, RELEASE } Build_Type;
 
-bool build_game(Cmd *cmd, char *name, BuildType build_type)
+bool build_game(Cmd *cmd, const char *name, Build_Type build_type)
 {
     cmd_append(cmd, "cc");
 
@@ -40,13 +40,34 @@ int main(int argc, char **argv)
     if (!mkdir_if_not_exists(BUILD_PATH)) return 1;
 
     Cmd cmd = {0};
-    BuildType build_type = RELEASE;
 
-    shift(argv, argc);
-    if (argc > 0) {
-        const char *arg = shift(argv, argc);
+    Build_Type build_type = RELEASE;
+    bool run = false;
+    const char *name;
+
+    const char *arg = shift(argv, argc);
+    while (argc > 0) {
+        arg = shift(argv, argc);
+
         if (strcmp(arg, "-debug") == 0) {
             build_type = DEBUG;
+
+        } else if (strcmp(arg, "-run") == 0) {
+            if (argc <= 0) {
+                nob_log(NOB_ERROR, "expected arg: name of the binary to run");
+                return 1;
+            }
+
+            arg = shift(argv, argc);
+            if (strcmp(arg, "breakout")    == 0 ||
+                strcmp(arg, "flappy_bird") == 0 ||
+                strcmp(arg, "snake")       == 0) {
+                run = true;
+                name = arg;
+            } else {
+                nob_log(NOB_ERROR, "invalid name: %s", name);
+                return 1;
+            }
         } else {
             nob_log(NOB_ERROR, "invalid argument: %s", arg);
             return 1;
@@ -56,6 +77,11 @@ int main(int argc, char **argv)
     if (!build_game(&cmd, "breakout",    build_type)) return 1;
     if (!build_game(&cmd, "flappy_bird", build_type)) return 1;
     if (!build_game(&cmd, "snake",       build_type)) return 1;
+
+    if (run) {
+        cmd_append(&cmd, temp_sprintf("./build/%s", name));
+        if (!cmd_run_sync_and_reset(&cmd)) return 1;
+    }
 
     return 0;
 }

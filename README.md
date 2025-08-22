@@ -4,9 +4,9 @@ I made this to learn how to use raylib and also because making games is fun.
 ## Preview
 <table>
   <tr>
-    <td>Breakout</td>
-    <td>Flappy Bird</td>
-    <td>Snake</td>
+    <td>breakout</td>
+    <td>flappy_bird</td>
+    <td>snake</td>
   </tr>
   <tr>
     <td><img src="assets/breakout.png"></td>
@@ -16,11 +16,12 @@ I made this to learn how to use raylib and also because making games is fun.
 </table>
 
 ## Quickstart
+Bootstrap the build system. Only need to do this once.
 ```console
 $ cc -o nob nob.c
-$ ./nob
 ```
-All the binaries will be in `build/` directory. Just run one from there. For example:
+Build and run any of the games.<br>
+Currently available games: `breakout`, `flappy_bird`, `snake`
 ```console
-$ ./build/breakout
+$ ./nob -run breakout
 ```
