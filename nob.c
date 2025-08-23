@@ -20,7 +20,7 @@ bool build_game(Cmd *cmd, const char *name, Build_Type build_type)
         cmd_append(cmd, "-Wall", "-Wextra", "-ggdb");
         break;
     case RELEASE:
-        cmd_append(cmd, "-O3");
+        cmd_append(cmd, "-Ofast", "-march=native");
         break;
     }
 
