@@ -2,21 +2,23 @@
 #include <raylib.h>
 #include <raymath.h>
 
-#define SCREEN_WIDTH GetScreenWidth()
-#define SCREEN_HEIGHT GetScreenHeight()
+#define SCALE_X (GetScreenWidth() / 800.0)
+#define SCALE_Y (GetScreenHeight() / 600.0)
+#define SCREEN_WIDTH (800.0 * SCALE_X)
+#define SCREEN_HEIGHT (600.0 * SCALE_Y)
 #define FPS 60
-#define PLAYER_WIDTH (100.0 * SCREEN_WIDTH / 800.0)
-#define PLAYER_HEIGHT (20.0 * SCREEN_HEIGHT / 600.0)
-#define PLAYER_SPEED (900.0 * SCREEN_WIDTH / 800.0)
-#define BALL_RADIUS (10.0 * SCREEN_WIDTH / 800.0)
-#define BALL_SPEED (300.0 * SCREEN_WIDTH / 800.0)
-#define BALL_ACCEL (3.0 * SCREEN_WIDTH / 800.0)
+#define PLAYER_WIDTH (100.0 * SCALE_X)
+#define PLAYER_HEIGHT (20.0 * SCALE_Y)
+#define PLAYER_SPEED (900.0 * SCALE_X)
+#define BALL_RADIUS (10.0 * SCALE_X)
+#define BALL_SPEED (300.0 * SCALE_X)
+#define BALL_ACCEL (3.0 * SCALE_X)
 #define BRICK_ROWS 10
 #define BRICK_COLS 10
-#define BRICK_PADDING (5.0 * SCREEN_WIDTH / 800.0)
+#define BRICK_PADDING (5.0 * SCALE_X)
 #define BRICK_WIDTH (SCREEN_WIDTH / BRICK_COLS - BRICK_PADDING)
 #define BRICK_HEIGHT (SCREEN_HEIGHT / BRICK_ROWS / 3.0)
-#define FONT_SIZE (20.0 * SCREEN_HEIGHT / 600.0)
+#define FONT_SIZE (20.0 * SCALE_Y)
 
 typedef enum { STANDBY, RUNNING, PAUSED, OVER } State;
 
