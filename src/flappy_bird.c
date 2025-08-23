@@ -12,7 +12,8 @@
 #define PILLAR_WIDTH (5.0 * BIRD_RADIUS)
 #define PILLAR_GAP (10.0 * BIRD_RADIUS)
 #define PILLAR_PADDING ((SCREEN_WIDTH - 2.0 * PILLAR_WIDTH) / 2.0)
-#define PILLAR_VELOCITY (200 * SCALE_X)
+#define PILLAR_VELOCITY (200.0 * SCALE_X)
+#define PILLAR_ACCEL (1.0 * SCALE_X)
 #define FONT_SIZE (20.0 * SCALE_Y)
 
 typedef enum { STANDBY, RUNNING, PAUSED, OVER } State;
@@ -34,7 +35,6 @@ static float  bird_velocity;
 static Pillar pillars[3];
 static float  pillar_velocity;
 static float  pillar_accel;
-static Font   custom_font;
 
 float random_piller_y(void)
 {
@@ -51,7 +51,7 @@ void init_game(void)
     bird.radius   = (Vector2){BIRD_RADIUS, BIRD_RADIUS};
     bird.color    = RAYWHITE;
 
-    pillar_accel    = 1;
+    pillar_accel    = PILLAR_ACCEL;
     pillar_velocity = PILLAR_VELOCITY;
 
     for (int i = 0; i < 3; ++i) {
@@ -67,8 +67,6 @@ void init_game(void)
 
         pillars[i].passed = false;
     }
-
-    custom_font = LoadFont("assets/Roboto-Regular.ttf");
 }
 
 void update_game(void)
@@ -185,10 +183,6 @@ void draw_game(void)
         DrawRectangleRec(pillars[i].top, RAYWHITE);
         DrawRectangleRec(pillars[i].bottom, RAYWHITE);
     }
-
-    const char *text = TextFormat("%.1f fps", 1.0 / GetFrameTime());
-    DrawTextEx(custom_font, text, (Vector2){20, 20},
-               (float)custom_font.baseSize, 2, MAROON);
 
     EndDrawing();
 }
