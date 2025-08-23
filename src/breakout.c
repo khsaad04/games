@@ -32,25 +32,25 @@ typedef struct {
 } Ball;
 
 typedef struct {
-    Rectangle rect;
-    bool      hit;
+    Rectangle rect [BRICK_ROWS][BRICK_COLS];
+    bool      hit  [BRICK_ROWS][BRICK_COLS];
 } Bricks;
 
 State  state;
 int    score;
 Player player;
 Ball   ball;
-Bricks bricks[BRICK_ROWS][BRICK_COLS];
+Bricks bricks;
 
 void init_bricks(void)
 {
     for (int i = 0; i < BRICK_ROWS; ++i) {
         for (int j = 0; j < BRICK_COLS; ++j) {
-            bricks[i][j].rect.x      = BRICK_PADDING * 0.5 + j * BRICK_WIDTH  + j * BRICK_PADDING;
-            bricks[i][j].rect.y      = BRICK_PADDING * 0.5 + i * BRICK_HEIGHT + i * BRICK_PADDING;
-            bricks[i][j].rect.width  = BRICK_WIDTH;
-            bricks[i][j].rect.height = BRICK_HEIGHT;
-            bricks[i][j].hit         = false;
+            bricks.rect[i][j].x      = BRICK_PADDING * 0.5 + j * BRICK_WIDTH  + j * BRICK_PADDING;
+            bricks.rect[i][j].y      = BRICK_PADDING * 0.5 + i * BRICK_HEIGHT + i * BRICK_PADDING;
+            bricks.rect[i][j].width  = BRICK_WIDTH;
+            bricks.rect[i][j].height = BRICK_HEIGHT;
+            bricks.hit[i][j]         = false;
         }
     }
 }
@@ -150,17 +150,17 @@ void update_game(void)
         for (int i = 0; i < BRICK_ROWS; ++i) {
             for (int j = 0; j < BRICK_COLS; ++j) {
                 if (CheckCollisionCircleRec((Vector2){ball.pos.x, ball.pos.y},
-                                            ball.radius, bricks[i][j].rect)) {
-                    if (!bricks[i][j].hit) {
+                                            ball.radius, bricks.rect[i][j])) {
+                    if (!bricks.hit[i][j]) {
                         score += 1;
-                        if (ball.pos.x + ball.radius < bricks[i][j].rect.x ||
+                        if (ball.pos.x + ball.radius < bricks.rect[i][j].x ||
                             ball.pos.x - ball.radius >
-                                bricks[i][j].rect.x + bricks[i][j].rect.width) {
+                                bricks.rect[i][j].x + bricks.rect[i][j].width) {
                             ball.velocity.x *= -1;
                         } else {
                             ball.velocity.y *= -1;
                         }
-                        bricks[i][j].hit = true;
+                        bricks.hit[i][j] = true;
                     }
                 }
             }
@@ -199,10 +199,10 @@ void update_game(void)
 
         for (int i = 0; i < BRICK_ROWS; ++i) {
             for (int j = 0; j < BRICK_COLS; ++j) {
-                bricks[i][j].rect.x      = BRICK_PADDING * 0.5 + j * BRICK_WIDTH  + j * BRICK_PADDING;
-                bricks[i][j].rect.y      = BRICK_PADDING * 0.5 + i * BRICK_HEIGHT + i * BRICK_PADDING;
-                bricks[i][j].rect.width  = BRICK_WIDTH;
-                bricks[i][j].rect.height = BRICK_HEIGHT;
+                bricks.rect[i][j].x      = BRICK_PADDING * 0.5 + j * BRICK_WIDTH  + j * BRICK_PADDING;
+                bricks.rect[i][j].y      = BRICK_PADDING * 0.5 + i * BRICK_HEIGHT + i * BRICK_PADDING;
+                bricks.rect[i][j].width  = BRICK_WIDTH;
+                bricks.rect[i][j].height = BRICK_HEIGHT;
             }
         }
     }
@@ -217,8 +217,8 @@ void draw_game(void)
     // draw enemy bricks
     for (int i = 0; i < BRICK_ROWS; ++i) {
         for (int j = 0; j < BRICK_COLS; ++j) {
-            if (!bricks[i][j].hit) {
-                DrawRectangleRec(bricks[i][j].rect, RAYWHITE);
+            if (!bricks.hit[i][j]) {
+                DrawRectangleRec(bricks.rect[i][j], RAYWHITE);
             }
         }
     }
