@@ -1,16 +1,19 @@
 #include <raylib.h>
 #include <time.h>
 
-#define SCREEN_WIDTH GetScreenWidth()
-#define SCREEN_HEIGHT GetScreenHeight()
+#define SCALE_X (GetScreenWidth() / 800.0)
+#define SCALE_Y (GetScreenHeight() / 600.0)
+#define SCREEN_WIDTH (800.0 * SCALE_X)
+#define SCREEN_HEIGHT (600.0 * SCALE_Y)
 #define FPS 60
-#define BIRD_RADIUS (20.0 * SCREEN_WIDTH / 800.0)
-#define GRAVITY (30.0 * SCREEN_HEIGHT / 600.0)
+#define BIRD_RADIUS (20.0 * SCALE_X)
+#define BIRD_PUSH (-500.0 * SCALE_Y)
+#define GRAVITY (1500.0 * SCALE_Y)
 #define PILLAR_WIDTH (5.0 * BIRD_RADIUS)
 #define PILLAR_GAP (10.0 * BIRD_RADIUS)
 #define PILLAR_PADDING ((SCREEN_WIDTH - 2.0 * PILLAR_WIDTH) / 2.0)
-#define PILLAR_VELOCITY (200 * SCREEN_WIDTH / 800.0)
-#define FONT_SIZE (20.0 * SCREEN_HEIGHT / 600.0)
+#define PILLAR_VELOCITY (200 * SCALE_X)
+#define FONT_SIZE (20.0 * SCALE_Y)
 
 typedef enum { STANDBY, RUNNING, PAUSED, OVER } State;
 
@@ -31,6 +34,7 @@ static float  bird_velocity;
 static Pillar pillars[3];
 static float  pillar_velocity;
 static float  pillar_accel;
+static Font   custom_font;
 
 float random_piller_y(void)
 {
@@ -63,6 +67,8 @@ void init_game(void)
 
         pillars[i].passed = false;
     }
+
+    custom_font = LoadFont("assets/Roboto-Regular.ttf");
 }
 
 void update_game(void)
@@ -70,21 +76,21 @@ void update_game(void)
     switch (state) {
     case STANDBY:
         if (IsKeyPressed(KEY_SPACE)) {
-            bird_velocity = -10.0 * SCREEN_HEIGHT / 600.0;
+            bird_velocity = BIRD_PUSH;
             state         = RUNNING;
         }
         break;
 
     case RUNNING:
-        bird.pos.y    += bird_velocity;
-        bird.radius.y -= bird_velocity * .01;
-        bird.radius.x += bird_velocity * .01;
-        bird_velocity += GRAVITY * GetFrameTime();
+        bird.pos.y    += bird_velocity * GetFrameTime();
+        bird.radius.y -= bird_velocity * 0.01 * GetFrameTime();
+        bird.radius.x += bird_velocity * 0.01 * GetFrameTime();
+        bird_velocity += GRAVITY       * GetFrameTime();
 
         pillar_velocity += pillar_accel * GetFrameTime();
 
         if (IsKeyPressed(KEY_SPACE)) {
-            bird_velocity = -10.0 * SCREEN_HEIGHT / 600.0;
+            bird_velocity = BIRD_PUSH;
         }
 
         if (IsKeyPressed(KEY_P)) {
@@ -179,6 +185,11 @@ void draw_game(void)
         DrawRectangleRec(pillars[i].top, RAYWHITE);
         DrawRectangleRec(pillars[i].bottom, RAYWHITE);
     }
+
+    const char *text = TextFormat("%.1f fps", 1.0 / GetFrameTime());
+    DrawTextEx(custom_font, text, (Vector2){20, 20},
+               (float)custom_font.baseSize, 2, MAROON);
+
     EndDrawing();
 }
 
@@ -186,7 +197,7 @@ int main(void)
 {
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(800, 600, "Flappy Bird");
-    SetTargetFPS(FPS);
+    // SetTargetFPS(FPS);
 
     SetRandomSeed(time(0));
     init_game();
