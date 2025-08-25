@@ -167,6 +167,14 @@ static inline void update_game(void)
                 game_over   = true;
             }
 
+            if (ball.pos.x + ball.radius > box_size.x + box_origin.x) {
+                ball.pos.x = box_size.x + box_origin.x - ball.radius;
+            }
+
+            if (ball.pos.x < ball.radius + box_origin.x) {
+                ball.pos.x = ball.radius + box_origin.x + ball.radius;
+            }
+
             // ball-paddle collision
             if (CheckCollisionCircleRec(ball.pos, ball.radius, paddle.rect)) {
                 ball.pos.y = paddle.rect.y - ball.radius;
