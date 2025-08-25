@@ -1,55 +1,63 @@
-#include <math.h>
 #include <raylib.h>
 #include <raymath.h>
+#include <stdbool.h>
 
-#define SCALE_X (GetScreenWidth() / 800.0)
-#define SCALE_Y (GetScreenHeight() / 600.0)
-#define SCREEN_WIDTH (800.0 * SCALE_X)
-#define SCREEN_HEIGHT (600.0 * SCALE_Y)
+#define SCREEN_WIDTH 800
+#define SCREEN_HEIGHT 450
 #define FPS 60
-#define PLAYER_WIDTH (100.0 * SCALE_X)
-#define PLAYER_HEIGHT (20.0 * SCALE_Y)
-#define PLAYER_SPEED (900.0 * SCALE_X)
-#define BALL_RADIUS (10.0 * SCALE_X)
-#define BALL_SPEED (300.0 * SCALE_X)
-#define BALL_ACCEL (3.0 * SCALE_X)
+
+#define SCALE_X (box_size.x / SCREEN_WIDTH)
+#define SCALE_Y (box_size.y / SCREEN_HEIGHT)
+
+#define PADDLE_WIDTH (100 * SCALE_X)
+#define PADDLE_HEIGHT (20 * SCALE_Y)
+#define PADDLE_SPEED (900 * SCALE_X)
+
+#define BALL_RADIUS (10 * SCALE_X)
+#define BALL_SPEED (300 * SCALE_X)
+
 #define BRICK_ROWS 10
 #define BRICK_COLS 10
-#define BRICK_PADDING (5.0 * SCALE_X)
-#define BRICK_WIDTH (SCREEN_WIDTH / BRICK_COLS - BRICK_PADDING)
-#define BRICK_HEIGHT (SCREEN_HEIGHT / BRICK_ROWS / 3.0)
-#define FONT_SIZE (20.0 * SCALE_Y)
+#define BRICK_PADDING (5 * SCALE_X)
+#define BRICK_WIDTH (box_size.x / BRICK_COLS - BRICK_PADDING)
+#define BRICK_HEIGHT (box_size.y / BRICK_ROWS / 3)
 
-typedef enum { STANDBY, RUNNING, PAUSED, OVER } State;
+#define BG_COLOR ((Color){0x14, 0x14, 0x0C, 0xFF})
+#define FG_COLOR ((Color){0xE6, 0xE3, 0xD5, 0xFF})
+#define FONT_SIZE (20 * SCALE_X)
 
 typedef struct {
     Rectangle rect;
-    float     velocity;
-} Player;
+    float     speed;
+} Paddle;
 
 typedef struct {
-    Vector2   pos, velocity, accel;
+    Vector2   pos, speed;
     float     radius;
-    bool      alive;
+    bool      active;
 } Ball;
 
 typedef struct {
-    Rectangle rect [BRICK_ROWS][BRICK_COLS];
-    bool      hit  [BRICK_ROWS][BRICK_COLS];
+    Rectangle rect[BRICK_ROWS][BRICK_COLS];
+    bool      hit[BRICK_ROWS][BRICK_COLS];
 } Bricks;
 
-State  state;
-int    score;
-Player player;
-Ball   ball;
-Bricks bricks;
+static Paddle paddle    = {0};
+static Ball   ball      = {0};
+static Bricks bricks    = {0};
+static int    score     =  0;
+static bool   pause     = true;
+static bool   game_over = false;
 
-void init_bricks(void)
+static Vector2 box_origin = {0};
+static Vector2 box_size   = {SCREEN_WIDTH, SCREEN_HEIGHT};
+
+static inline void init_bricks(void)
 {
     for (int i = 0; i < BRICK_ROWS; ++i) {
         for (int j = 0; j < BRICK_COLS; ++j) {
-            bricks.rect[i][j].x      = BRICK_PADDING * 0.5 + j * BRICK_WIDTH  + j * BRICK_PADDING;
-            bricks.rect[i][j].y      = BRICK_PADDING * 0.5 + i * BRICK_HEIGHT + i * BRICK_PADDING;
+            bricks.rect[i][j].x      = box_origin.x + BRICK_PADDING * 0.5 + j * BRICK_WIDTH  + j * BRICK_PADDING;
+            bricks.rect[i][j].y      = box_origin.y + BRICK_PADDING * 0.5 + i * BRICK_HEIGHT + i * BRICK_PADDING;
             bricks.rect[i][j].width  = BRICK_WIDTH;
             bricks.rect[i][j].height = BRICK_HEIGHT;
             bricks.hit[i][j]         = false;
@@ -57,223 +65,205 @@ void init_bricks(void)
     }
 }
 
-void init_game(void)
+static inline void init_game(void)
 {
     score = 0;
-    state = STANDBY;
 
-    player.rect = (Rectangle){.x      = SCREEN_WIDTH / 2.0 - PLAYER_WIDTH / 2.0,
-                              .y      = SCREEN_HEIGHT - SCREEN_HEIGHT * 0.1,
-                              .width  = PLAYER_WIDTH,
-                              .height = PLAYER_HEIGHT};
-    player.velocity = PLAYER_SPEED;
+    float paddle_x = box_origin.x + box_size.x * 0.5 - PADDLE_WIDTH * 0.5;
+    float paddle_y = box_origin.y + box_size.y * 0.9;
+    paddle.rect    = (Rectangle){.x      = paddle_x,
+                                 .y      = paddle_y,
+                                 .width  = PADDLE_WIDTH,
+                                 .height = PADDLE_HEIGHT};
+    paddle.speed   = PADDLE_SPEED;
 
-    ball.pos      = (Vector2){SCREEN_WIDTH / 2.0, 2.0 * SCREEN_HEIGHT / 3.0};
-    ball.velocity = (Vector2){BALL_SPEED, -BALL_SPEED};
-    ball.accel    = (Vector2){BALL_ACCEL, BALL_ACCEL};
-    ball.radius   = BALL_RADIUS;
-    ball.alive    = true;
+    ball.pos    = (Vector2){paddle_x + PADDLE_WIDTH * 0.5, paddle_y - BALL_RADIUS * 2.0};
+    ball.speed  = (Vector2){BALL_SPEED, BALL_SPEED};
+    ball.radius = BALL_RADIUS;
+    ball.active = true;
 
     init_bricks();
 }
 
-void update_game(void)
+static inline void update_game(void)
 {
-    switch (state) {
-    case STANDBY:
-        // start game
-        if (IsKeyPressed(KEY_SPACE)) {
-            state = RUNNING;
-        }
-        break;
-    case RUNNING:
-        // pause game
-        if (IsKeyPressed(KEY_P)) {
-            state = PAUSED;
-        }
-
-        // player control
-        if (IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A)) {
-            player.velocity = -fabsf(player.velocity);
-            player.rect.x += player.velocity * GetFrameTime();
-        }
-
-        if (IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_D)) {
-            player.velocity = fabsf(player.velocity);
-            player.rect.x += player.velocity * GetFrameTime();
-        }
-
-        // player-wall collision
-        if (player.rect.x > SCREEN_WIDTH - player.rect.width) {
-            player.rect.x = SCREEN_WIDTH - player.rect.width;
-        }
-
-        if (player.rect.x < 0) {
-            player.rect.x = 0;
-        }
-
-        // ball movement
-        ball.pos      = Vector2Add(ball.pos,      Vector2Scale(ball.velocity, GetFrameTime()));
-        ball.velocity = Vector2Add(ball.velocity, Vector2Scale(ball.accel,    GetFrameTime()));
-
-        // ball-wall collision
-        if (ball.pos.x + ball.radius > SCREEN_WIDTH ||
-            ball.pos.x < ball.radius) {
-            ball.velocity.x *= -1;
-        }
-
-        if (ball.pos.y < ball.radius) {
-            ball.velocity.y *= -1;
-        }
-
-        if (ball.pos.y > SCREEN_HEIGHT + ball.radius) {
-            ball.alive = false;
-            state      = OVER;
-        }
-
-        // ball-player collision
-        if (CheckCollisionCircleRec(ball.pos, ball.radius, player.rect)) {
-            ball.pos.y = player.rect.y - ball.radius;
-            ball.velocity.y *= -1;
-
-            float ball_dx_from_center = ball.pos.x - player.rect.x + player.rect.width / 2;
-            float normalized_ball_dx_from_center = fminf(1, ball_dx_from_center / (player.rect.width / 2));
-            ball.velocity.x = BALL_SPEED * normalized_ball_dx_from_center;
-
-            if (player.velocity < 0 && ball.velocity.x > 0) {
-                ball.velocity.x *= -1;
-            }
-            if (player.velocity > 0 && ball.velocity.x < 0) {
-                ball.velocity.x *= -1;
-            }
-        }
-
-        // ball-brick collision
-        for (int i = 0; i < BRICK_ROWS; ++i) {
-            for (int j = 0; j < BRICK_COLS; ++j) {
-                if (CheckCollisionCircleRec((Vector2){ball.pos.x, ball.pos.y},
-                                            ball.radius, bricks.rect[i][j])) {
-                    if (!bricks.hit[i][j]) {
-                        score += 1;
-                        if (ball.pos.x + ball.radius < bricks.rect[i][j].x ||
-                            ball.pos.x - ball.radius >
-                                bricks.rect[i][j].x + bricks.rect[i][j].width) {
-                            ball.velocity.x *= -1;
-                        } else {
-                            ball.velocity.y *= -1;
-                        }
-                        bricks.hit[i][j] = true;
-                    }
-                }
-            }
-        }
-
-        // reset bricks
-        if (fmodf(score, 100) == 0) init_bricks();
-
-        break;
-    case PAUSED:
-        // unpause game
-        if (IsKeyPressed(KEY_P)) {
-            state = RUNNING;
-        }
-        break;
-    case OVER:
-        // restart game
-        if (IsKeyPressed(KEY_ENTER)) {
-            init_game();
-        }
-        break;
-    }
-
-    // handle window resize events
     if (IsWindowResized()) {
-        player.rect.x      = SCREEN_WIDTH / 2.0 - PLAYER_WIDTH / 2.0;
-        player.rect.y      = SCREEN_HEIGHT - SCREEN_HEIGHT * 0.1;
-        player.rect.width  = PLAYER_WIDTH;
-        player.rect.height = PLAYER_HEIGHT;
-        player.velocity    = PLAYER_SPEED;
+        int new_screen_width  = GetScreenWidth();
+        int new_screen_height = GetScreenHeight();
 
-        ball.pos      = (Vector2){SCREEN_WIDTH / 2.0, 2.0 * SCREEN_HEIGHT / 3.0};
-        ball.radius   = BALL_RADIUS;
-        ball.velocity = (Vector2){BALL_SPEED, -BALL_SPEED};
-        ball.accel    = (Vector2){BALL_ACCEL, BALL_ACCEL};
+        if (new_screen_width / 16 >= new_screen_height / 9) {
+            box_size.y = new_screen_height;
+            box_size.x = box_size.y * 16 / 9;
+        } else {
+            box_size.x = new_screen_width;
+            box_size.y = box_size.x * 9  / 16;
+        }
+
+        box_origin.x = (new_screen_width  - box_size.x) * 0.5;
+        box_origin.y = (new_screen_height - box_size.y) * 0.5;
+
+        float paddle_x = box_origin.x + box_size.x * 0.5 - PADDLE_WIDTH * 0.5;
+        float paddle_y = box_origin.y + box_size.y * 0.9;
+        paddle.rect    = (Rectangle){.x      = paddle_x,
+                                     .y      = paddle_y,
+                                     .width  = PADDLE_WIDTH,
+                                     .height = PADDLE_HEIGHT};
+        paddle.speed   = PADDLE_SPEED;
+
+        ball.pos    = (Vector2){paddle_x + PADDLE_WIDTH * 0.5, paddle_y - BALL_RADIUS * 2.0};
+        ball.speed  = (Vector2){BALL_SPEED, BALL_SPEED};
+        ball.radius = BALL_RADIUS;
 
         for (int i = 0; i < BRICK_ROWS; ++i) {
             for (int j = 0; j < BRICK_COLS; ++j) {
-                bricks.rect[i][j].x      = BRICK_PADDING * 0.5 + j * BRICK_WIDTH  + j * BRICK_PADDING;
-                bricks.rect[i][j].y      = BRICK_PADDING * 0.5 + i * BRICK_HEIGHT + i * BRICK_PADDING;
+                bricks.rect[i][j].x      = box_origin.x + BRICK_PADDING * 0.5 + j * BRICK_WIDTH + j * BRICK_PADDING;
+                bricks.rect[i][j].y      = box_origin.y + BRICK_PADDING * 0.5 + i * BRICK_HEIGHT + i * BRICK_PADDING;
                 bricks.rect[i][j].width  = BRICK_WIDTH;
                 bricks.rect[i][j].height = BRICK_HEIGHT;
             }
         }
     }
-}
 
-void draw_game(void)
-{
-    BeginDrawing();
+    if (!game_over) {
+        if (!pause) {
+            // toggle pause
+            if (IsKeyPressed(KEY_SPACE)) pause = !pause;
 
-    ClearBackground(BLACK);
-
-    // draw enemy bricks
-    for (int i = 0; i < BRICK_ROWS; ++i) {
-        for (int j = 0; j < BRICK_COLS; ++j) {
-            if (!bricks.hit[i][j]) {
-                DrawRectangleRec(bricks.rect[i][j], RAYWHITE);
+            // paddle control
+            if (IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A)) {
+                paddle.speed = -fabsf(paddle.speed);
+                paddle.rect.x += paddle.speed * GetFrameTime();
             }
+
+            if (IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_D)) {
+                paddle.speed = fabsf(paddle.speed);
+                paddle.rect.x += paddle.speed * GetFrameTime();
+            }
+
+            // paddle-wall collision
+            if (paddle.rect.x > box_size.x + box_origin.x - paddle.rect.width) {
+                paddle.rect.x = box_size.x + box_origin.x - paddle.rect.width;
+            }
+
+            if (paddle.rect.x < box_origin.x) {
+                paddle.rect.x = box_origin.x;
+            }
+
+            // ball movement
+            ball.pos = Vector2Add(ball.pos, Vector2Scale(ball.speed, GetFrameTime()));
+
+            // ball-wall collision
+            if (ball.pos.x + ball.radius > box_size.x + box_origin.x ||
+                ball.pos.x < ball.radius + box_origin.x) {
+                ball.speed.x *= -1;
+            }
+
+            if (ball.pos.y < ball.radius + box_origin.y) {
+                ball.speed.y *= -1;
+            }
+
+            if (ball.pos.y > box_size.y + box_origin.y + ball.radius) {
+                ball.active = false;
+                game_over   = true;
+            }
+
+            // ball-paddle collision
+            if (CheckCollisionCircleRec(ball.pos, ball.radius, paddle.rect)) {
+                ball.pos.y = paddle.rect.y - ball.radius;
+                ball.speed.y *= -1;
+
+                if (paddle.speed < 0 && ball.speed.x > 0) {
+                    ball.speed.x *= -1;
+                }
+                if (paddle.speed > 0 && ball.speed.x < 0) {
+                    ball.speed.x *= -1;
+                }
+            }
+
+            // ball-brick collision
+            for (int i = 0; i < BRICK_ROWS; ++i) {
+                for (int j = 0; j < BRICK_COLS; ++j) {
+                    if (CheckCollisionCircleRec((Vector2){ball.pos.x, ball.pos.y}, ball.radius, bricks.rect[i][j])) {
+                        if (!bricks.hit[i][j]) {
+                            score += 1;
+                            if (ball.pos.x + ball.radius < bricks.rect[i][j].x ||
+                                ball.pos.x - ball.radius > bricks.rect[i][j].x + bricks.rect[i][j].width) {
+                                ball.speed.x *= -1;
+                            } else {
+                                ball.speed.y *= -1;
+                            }
+                            bricks.hit[i][j] = true;
+                        }
+                    }
+                }
+            }
+
+            // reset bricks
+            if (fmodf(score, 100) == 0) init_bricks();
+        } else {
+            // toggle pause
+            if (IsKeyPressed(KEY_SPACE)) pause = !pause;
+        }
+    } else {
+        // restart game
+        if (IsKeyPressed(KEY_ENTER)) {
+            game_over = !game_over;
+            init_game();
+            pause = true;
         }
     }
+}
 
-    // draw player tile
-    DrawRectangleRec(player.rect, RAYWHITE);
+static inline void draw_game(void)
+{
+    BeginDrawing();
+    {
+        ClearBackground(BLACK);
+        DrawRectangleV(box_origin, box_size, BG_COLOR);
 
-    // draw ball
-    if (ball.alive) DrawCircleV(ball.pos, ball.radius, RAYWHITE);
+        // draw enemy bricks
+        for (int i = 0; i < BRICK_ROWS; ++i) {
+            for (int j = 0; j < BRICK_COLS; ++j) {
+                if (!bricks.hit[i][j]) {
+                    DrawRectangleRec(bricks.rect[i][j], FG_COLOR);
+                }
+            }
+        }
 
-    const char *text;
-    switch (state) {
-    case STANDBY:
-        text = "Press <space> to start";
-        DrawText(text, SCREEN_WIDTH / 2 - MeasureText(text, FONT_SIZE) / 2.0,
-                 SCREEN_HEIGHT * .75, FONT_SIZE, RAYWHITE);
-        break;
+        // draw paddle tile
+        DrawRectangleRec(paddle.rect, FG_COLOR);
 
-    case RUNNING:
-        DrawText(TextFormat("Score: %d", score), 20, SCREEN_HEIGHT - 25,
-                 FONT_SIZE, RAYWHITE);
-        break;
+        // draw ball
+        if (ball.active) DrawCircleV(ball.pos, ball.radius, FG_COLOR);
 
-    case PAUSED:
-        text = "Paused";
-        DrawText(text,
-                 SCREEN_WIDTH / 2 - MeasureText(text, FONT_SIZE * 3 / 2) / 2.0,
-                 SCREEN_HEIGHT * .55, FONT_SIZE * 3 / 2, RAYWHITE);
-        break;
+        const char *text = TextFormat("Score: %d", score);
+        DrawText(text, box_origin.x + 20.0 * SCALE_X, box_origin.y + box_size.y - 25.0 * SCALE_Y, FONT_SIZE, FG_COLOR);
 
-    case OVER:
-        text = "GAME OVER";
-        DrawText(text,
-                 SCREEN_WIDTH / 2 - MeasureText(text, FONT_SIZE * 3 / 2) / 2.0,
-                 SCREEN_HEIGHT * .55, FONT_SIZE * 3 / 2, RAYWHITE);
-        text = TextFormat("Score: %d", score);
-        DrawText(text,
-                 SCREEN_WIDTH / 2 - MeasureText(text, FONT_SIZE * 3 / 2) / 2.0,
-                 SCREEN_HEIGHT * .65, FONT_SIZE * 3 / 2, RAYWHITE);
-        text = "Press <enter> to restart";
-        DrawText(text,
-                 SCREEN_WIDTH / 2 - MeasureText(text, FONT_SIZE * 3 / 2) / 2.0,
-                 SCREEN_HEIGHT * .75, FONT_SIZE * 3 / 2, RAYWHITE);
-        break;
+        if (pause) {
+            text = "Press <space> to start";
+            DrawText(text,
+                     box_origin.x + box_size.x * 0.5 - MeasureText(text, FONT_SIZE) / 2.0,
+                     box_origin.y + box_size.y * 0.75, FONT_SIZE, FG_COLOR);
+        }
+
+        if (game_over) {
+            text = "GAME OVER";
+            DrawText(text,
+                     box_origin.x + box_size.x * 0.5 - MeasureText(text, FONT_SIZE * 1.5) / 2.0,
+                     box_origin.y + box_size.y * 0.55, FONT_SIZE * 1.5, FG_COLOR);
+            text = "Press <enter> to restart";
+            DrawText(text,
+                     box_origin.x + box_size.x * 0.5 - MeasureText(text, FONT_SIZE * 1.5) / 2.0,
+                     box_origin.y + box_size.y * 0.65, FONT_SIZE * 1.5, FG_COLOR);
+        }
     }
-
     EndDrawing();
 }
 
-int main(void)
+int main()
 {
-    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
-    InitWindow(800, 600, "Breakout");
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_WINDOW_HIGHDPI);
+    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Breakout [Rewrite]");
     SetTargetFPS(FPS);
 
     init_game();
@@ -283,6 +273,5 @@ int main(void)
         draw_game();
     }
 
-    CloseWindow();
     return 0;
 }
