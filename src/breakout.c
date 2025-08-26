@@ -6,8 +6,8 @@
 #define SCREEN_HEIGHT 450
 #define FPS 60
 
-#define SCALE_X (box_size.x / SCREEN_WIDTH)
-#define SCALE_Y (box_size.y / SCREEN_HEIGHT)
+#define SCALE_X (box.width / SCREEN_WIDTH)
+#define SCALE_Y (box.height / SCREEN_HEIGHT)
 
 #define PADDLE_WIDTH (100 * SCALE_X)
 #define PADDLE_HEIGHT (20 * SCALE_Y)
@@ -19,8 +19,8 @@
 #define BRICK_ROWS 10
 #define BRICK_COLS 10
 #define BRICK_PADDING (5 * SCALE_X)
-#define BRICK_WIDTH (box_size.x / BRICK_COLS - BRICK_PADDING)
-#define BRICK_HEIGHT (box_size.y / BRICK_ROWS / 3)
+#define BRICK_WIDTH (box.width / BRICK_COLS - BRICK_PADDING)
+#define BRICK_HEIGHT (box.height / BRICK_ROWS / 3)
 
 #define BG_COLOR ((Color){0x14, 0x14, 0x0C, 0xFF})
 #define FG_COLOR ((Color){0xE6, 0xE3, 0xD5, 0xFF})
@@ -49,15 +49,14 @@ static int    score     =  0;
 static bool   pause     = true;
 static bool   game_over = false;
 
-static Vector2 box_origin = {0};
-static Vector2 box_size   = {SCREEN_WIDTH, SCREEN_HEIGHT};
+static Rectangle box = {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT};
 
 static inline void init_bricks(void)
 {
     for (int i = 0; i < BRICK_ROWS; ++i) {
         for (int j = 0; j < BRICK_COLS; ++j) {
-            bricks.rect[i][j].x      = box_origin.x + BRICK_PADDING * 0.5 + j * BRICK_WIDTH  + j * BRICK_PADDING;
-            bricks.rect[i][j].y      = box_origin.y + BRICK_PADDING * 0.5 + i * BRICK_HEIGHT + i * BRICK_PADDING;
+            bricks.rect[i][j].x      = box.x + BRICK_PADDING * 0.5 + j * BRICK_WIDTH  + j * BRICK_PADDING;
+            bricks.rect[i][j].y      = box.y + BRICK_PADDING * 0.5 + i * BRICK_HEIGHT + i * BRICK_PADDING;
             bricks.rect[i][j].width  = BRICK_WIDTH;
             bricks.rect[i][j].height = BRICK_HEIGHT;
             bricks.hit[i][j]         = false;
@@ -69,8 +68,8 @@ static inline void init_game(void)
 {
     score = 0;
 
-    float paddle_x = box_origin.x + box_size.x * 0.5 - PADDLE_WIDTH * 0.5;
-    float paddle_y = box_origin.y + box_size.y * 0.9;
+    float paddle_x = box.x + box.width  * 0.5 - PADDLE_WIDTH * 0.5;
+    float paddle_y = box.y + box.height * 0.9;
     paddle.rect    = (Rectangle){.x      = paddle_x,
                                  .y      = paddle_y,
                                  .width  = PADDLE_WIDTH,
@@ -92,18 +91,18 @@ static inline void update_game(void)
         int new_screen_height = GetScreenHeight();
 
         if (new_screen_width / 16 >= new_screen_height / 9) {
-            box_size.y = new_screen_height;
-            box_size.x = box_size.y * 16 / 9;
+            box.height = new_screen_height;
+            box.width  = box.height * 16 / 9;
         } else {
-            box_size.x = new_screen_width;
-            box_size.y = box_size.x * 9  / 16;
+            box.width  = new_screen_width;
+            box.height = box.width  * 9  / 16;
         }
 
-        box_origin.x = (new_screen_width  - box_size.x) * 0.5;
-        box_origin.y = (new_screen_height - box_size.y) * 0.5;
+        box.x = (new_screen_width  - box.width)  * 0.5;
+        box.y = (new_screen_height - box.height) * 0.5;
 
-        float paddle_x = box_origin.x + box_size.x * 0.5 - PADDLE_WIDTH * 0.5;
-        float paddle_y = box_origin.y + box_size.y * 0.9;
+        float paddle_x = box.x + box.width  * 0.5 - PADDLE_WIDTH * 0.5;
+        float paddle_y = box.y + box.height * 0.9;
         paddle.rect    = (Rectangle){.x      = paddle_x,
                                      .y      = paddle_y,
                                      .width  = PADDLE_WIDTH,
@@ -116,8 +115,8 @@ static inline void update_game(void)
 
         for (int i = 0; i < BRICK_ROWS; ++i) {
             for (int j = 0; j < BRICK_COLS; ++j) {
-                bricks.rect[i][j].x      = box_origin.x + BRICK_PADDING * 0.5 + j * BRICK_WIDTH + j * BRICK_PADDING;
-                bricks.rect[i][j].y      = box_origin.y + BRICK_PADDING * 0.5 + i * BRICK_HEIGHT + i * BRICK_PADDING;
+                bricks.rect[i][j].x      = box.x + BRICK_PADDING * 0.5 + j * BRICK_WIDTH + j * BRICK_PADDING;
+                bricks.rect[i][j].y      = box.y + BRICK_PADDING * 0.5 + i * BRICK_HEIGHT + i * BRICK_PADDING;
                 bricks.rect[i][j].width  = BRICK_WIDTH;
                 bricks.rect[i][j].height = BRICK_HEIGHT;
             }
@@ -141,38 +140,38 @@ static inline void update_game(void)
             }
 
             // paddle-wall collision
-            if (paddle.rect.x > box_size.x + box_origin.x - paddle.rect.width) {
-                paddle.rect.x = box_size.x + box_origin.x - paddle.rect.width;
+            if (paddle.rect.x > box.width + box.x - paddle.rect.width) {
+                paddle.rect.x = box.width + box.x - paddle.rect.width;
             }
 
-            if (paddle.rect.x < box_origin.x) {
-                paddle.rect.x = box_origin.x;
+            if (paddle.rect.x < box.x) {
+                paddle.rect.x = box.x;
             }
 
             // ball movement
             ball.pos = Vector2Add(ball.pos, Vector2Scale(ball.speed, GetFrameTime()));
 
             // ball-wall collision
-            if (ball.pos.x + ball.radius > box_size.x + box_origin.x ||
-                ball.pos.x < ball.radius + box_origin.x) {
+            if (ball.pos.x + ball.radius > box.width + box.x ||
+                ball.pos.x < ball.radius + box.x) {
                 ball.speed.x *= -1;
             }
 
-            if (ball.pos.y < ball.radius + box_origin.y) {
+            if (ball.pos.y < ball.radius + box.y) {
                 ball.speed.y *= -1;
             }
 
-            if (ball.pos.y > box_size.y + box_origin.y + ball.radius) {
+            if (ball.pos.y > box.height + box.y + ball.radius) {
                 ball.active = false;
                 game_over   = true;
             }
 
-            if (ball.pos.x + ball.radius > box_size.x + box_origin.x) {
-                ball.pos.x = box_size.x + box_origin.x - ball.radius;
+            if (ball.pos.x + ball.radius > box.width + box.x) {
+                ball.pos.x = box.width + box.x - ball.radius;
             }
 
-            if (ball.pos.x < ball.radius + box_origin.x) {
-                ball.pos.x = ball.radius + box_origin.x + ball.radius;
+            if (ball.pos.x < ball.radius + box.x) {
+                ball.pos.x = ball.radius + box.x + ball.radius;
             }
 
             // ball-paddle collision
@@ -227,7 +226,7 @@ static inline void draw_game(void)
     BeginDrawing();
     {
         ClearBackground(BLACK);
-        DrawRectangleV(box_origin, box_size, BG_COLOR);
+        DrawRectangleRec(box, BG_COLOR);
 
         // draw enemy bricks
         for (int i = 0; i < BRICK_ROWS; ++i) {
@@ -245,24 +244,24 @@ static inline void draw_game(void)
         if (ball.active) DrawCircleV(ball.pos, ball.radius, FG_COLOR);
 
         const char *text = TextFormat("Score: %d", score);
-        DrawText(text, box_origin.x + 20.0 * SCALE_X, box_origin.y + box_size.y - 25.0 * SCALE_Y, FONT_SIZE, FG_COLOR);
+        DrawText(text, box.x + 20.0 * SCALE_X, box.y + box.height - 25.0 * SCALE_Y, FONT_SIZE, FG_COLOR);
 
         if (pause) {
             text = "Press <space> to start";
             DrawText(text,
-                     box_origin.x + box_size.x * 0.5 - MeasureText(text, FONT_SIZE) / 2.0,
-                     box_origin.y + box_size.y * 0.75, FONT_SIZE, FG_COLOR);
+                     box.x + box.width  * 0.5 - MeasureText(text, FONT_SIZE) / 2.0,
+                     box.y + box.height * 0.75, FONT_SIZE, FG_COLOR);
         }
 
         if (game_over) {
             text = "GAME OVER";
             DrawText(text,
-                     box_origin.x + box_size.x * 0.5 - MeasureText(text, FONT_SIZE * 1.5) / 2.0,
-                     box_origin.y + box_size.y * 0.55, FONT_SIZE * 1.5, FG_COLOR);
+                     box.x + box.width  * 0.5 - MeasureText(text, FONT_SIZE * 1.5) / 2.0,
+                     box.y + box.height * 0.55, FONT_SIZE * 1.5, FG_COLOR);
             text = "Press <enter> to restart";
             DrawText(text,
-                     box_origin.x + box_size.x * 0.5 - MeasureText(text, FONT_SIZE * 1.5) / 2.0,
-                     box_origin.y + box_size.y * 0.65, FONT_SIZE * 1.5, FG_COLOR);
+                     box.x + box.width  * 0.5 - MeasureText(text, FONT_SIZE * 1.5) / 2.0,
+                     box.y + box.height * 0.65, FONT_SIZE * 1.5, FG_COLOR);
         }
     }
     EndDrawing();
