@@ -272,7 +272,7 @@ static inline void draw_game(void)
 
 int main()
 {
-    SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_WINDOW_HIGHDPI);
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Breakout [Rewrite]");
     SetTargetFPS(FPS);
 
