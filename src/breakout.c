@@ -1,3 +1,4 @@
+#include <math.h>
 #include <raylib.h>
 #include <raymath.h>
 #include <stdbool.h>
@@ -110,10 +111,10 @@ static inline void update_game(void)
                                      .y      = box.y + box.height * paddle_ratio_y,
                                      .width  = PADDLE_WIDTH,
                                      .height = PADDLE_HEIGHT};
-        paddle.speed   = PADDLE_SPEED;
+        paddle.speed = copysignf(PADDLE_SPEED, paddle.speed);
 
         ball.pos    = (Vector2){box.x + box.width  * ball_ratio_x, box.y + box.height * ball_ratio_y};
-        ball.speed  = (Vector2){BALL_SPEED, BALL_SPEED};
+        ball.speed = (Vector2){copysignf(BALL_SPEED, ball.speed.x), copysignf(BALL_SPEED, ball.speed.y)};
         ball.radius = BALL_RADIUS;
 
         for (int i = 0; i < BRICK_ROWS; ++i) {
