@@ -87,6 +87,11 @@ static inline void init_game(void)
 static inline void update_game(void)
 {
     if (IsWindowResized()) {
+        float paddle_ratio_x = (paddle.rect.x - box.x) / box.width;
+        float paddle_ratio_y = (paddle.rect.y - box.y) / box.height;
+        float ball_ratio_x   = (ball.pos.x    - box.x) / box.width;
+        float ball_ratio_y   = (ball.pos.y    - box.y) / box.height;
+
         int new_screen_width  = GetScreenWidth();
         int new_screen_height = GetScreenHeight();
 
@@ -101,15 +106,13 @@ static inline void update_game(void)
         box.x = (new_screen_width  - box.width)  * 0.5;
         box.y = (new_screen_height - box.height) * 0.5;
 
-        float paddle_x = box.x + box.width  * 0.5 - PADDLE_WIDTH * 0.5;
-        float paddle_y = box.y + box.height * 0.9;
-        paddle.rect    = (Rectangle){.x      = paddle_x,
-                                     .y      = paddle_y,
+        paddle.rect    = (Rectangle){.x      = box.x + box.width  * paddle_ratio_x,
+                                     .y      = box.y + box.height * paddle_ratio_y,
                                      .width  = PADDLE_WIDTH,
                                      .height = PADDLE_HEIGHT};
         paddle.speed   = PADDLE_SPEED;
 
-        ball.pos    = (Vector2){paddle_x + PADDLE_WIDTH * 0.5, paddle_y - BALL_RADIUS * 2.0};
+        ball.pos    = (Vector2){box.x + box.width  * ball_ratio_x, box.y + box.height * ball_ratio_y};
         ball.speed  = (Vector2){BALL_SPEED, BALL_SPEED};
         ball.radius = BALL_RADIUS;
 
