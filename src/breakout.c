@@ -274,7 +274,7 @@ static inline void draw_game(void)
 int main()
 {
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
-    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Breakout [Rewrite]");
+    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Breakout");
     SetTargetFPS(FPS);
 
     init_game();
