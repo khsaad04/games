@@ -1,206 +1,249 @@
 #include <raylib.h>
-#include <time.h>
 
-#define SCALE_X (GetScreenWidth() / 800.0)
-#define SCALE_Y (GetScreenHeight() / 600.0)
-#define SCREEN_WIDTH (800.0 * SCALE_X)
-#define SCREEN_HEIGHT (600.0 * SCALE_Y)
+#define SCREEN_WIDTH 800
+#define SCREEN_HEIGHT 450
 #define FPS 60
-#define BIRD_RADIUS (20.0 * SCALE_X)
-#define BIRD_PUSH (-500.0 * SCALE_Y)
-#define GRAVITY (1500.0 * SCALE_Y)
-#define PILLAR_WIDTH (5.0 * BIRD_RADIUS)
-#define PILLAR_GAP (10.0 * BIRD_RADIUS)
-#define PILLAR_PADDING ((SCREEN_WIDTH - 2.0 * PILLAR_WIDTH) / 2.0)
-#define PILLAR_VELOCITY (200.0 * SCALE_X)
-#define PILLAR_ACCEL (1.0 * SCALE_X)
-#define FONT_SIZE (20.0 * SCALE_Y)
+#define RANDOM_SEED 2147483629
 
-typedef enum { STANDBY, RUNNING, PAUSED, OVER } State;
+#define SCALE_X (box.width / SCREEN_WIDTH)
+#define SCALE_Y (box.height / SCREEN_HEIGHT)
+
+#define BIRD_RADIUS (20 * SCALE_Y)
+#define BIRD_GRAVITY (1500 * SCALE_Y)
+#define BIRD_FLAP (-BIRD_GRAVITY / 4)
+
+#define PILLARS_COUNT 5
+#define PILLAR_WIDTH (BIRD_RADIUS * 3)
+#define PILLAR_GAP (BIRD_RADIUS * 8)
+#define PILLAR_PADDING (PILLAR_WIDTH * 3.5)
+#define PILLAR_SPEED (150 * SCALE_X)
+#define PILLAR_ACCEL (1.5 * SCALE_X)
+
+#define BG_COLOR ((Color){0x14, 0x14, 0x0C, 0xFF})
+#define FG_COLOR ((Color){0xE6, 0xE3, 0xD5, 0xFF})
+#define FONT_SIZE (20 * SCALE_Y)
 
 typedef struct {
     Vector2   pos, radius;
+    float     speed;
     Color     color;
 } Bird;
 
 typedef struct {
     Rectangle top, bottom;
+    float     speed, accel;
     bool      passed;
-} Pillar;
+} Pillars;
 
-static State  state;
-static int    score;
-static Bird   bird;
-static float  bird_velocity;
-static Pillar pillars[3];
-static float  pillar_velocity;
-static float  pillar_accel;
+static int     score = 0;
+static Bird    bird  = {0};
+static Pillars pillars[PILLARS_COUNT] = {0};
+static bool    pause     = true;
+static bool    game_over = false;
+
+static Rectangle box = {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT};
 
 float random_piller_y(void)
 {
-    return GetRandomValue(0, SCREEN_HEIGHT * 2.0 / 3.0);
+    return GetRandomValue(box.height * 0.1, box.height * 0.9 - PILLAR_GAP);
 }
 
 void init_game(void)
 {
-    state = STANDBY;
+    SetRandomSeed(RANDOM_SEED);
     score = 0;
 
-    bird_velocity = 0;
-    bird.pos      = (Vector2){SCREEN_WIDTH / 3.0, SCREEN_HEIGHT / 3.0};
-    bird.radius   = (Vector2){BIRD_RADIUS, BIRD_RADIUS};
-    bird.color    = RAYWHITE;
+    bird.pos    = (Vector2){box.x + box.width / 3, box.y + box.height * 2 / 5};
+    bird.radius = (Vector2){BIRD_RADIUS, BIRD_RADIUS};
+    bird.color  = RAYWHITE;
+    bird.speed  = BIRD_FLAP;
 
-    pillar_accel    = PILLAR_ACCEL;
-    pillar_velocity = PILLAR_VELOCITY;
+    for (int i = 0; i < PILLARS_COUNT; ++i) {
+        float y_cord = random_piller_y();
 
-    for (int i = 0; i < 3; ++i) {
+        pillars[i].top.x      = pillars[i].bottom.x = box.x + box.width * 2 / 3 + i * PILLAR_PADDING;
+        pillars[i].top.y      = box.y;
+        pillars[i].top.width  = pillars[i].bottom.width = PILLAR_WIDTH;
+        pillars[i].top.height = y_cord;
 
-        float y_cord        = random_piller_y();
-        pillars[i].top.x    = pillars[i].bottom.x = SCREEN_WIDTH + i * PILLAR_PADDING;
-        pillars[i].top.y    = 0;
-        pillars[i].bottom.y = y_cord + PILLAR_GAP;
-
-        pillars[i].top.width     = pillars[i].bottom.width = PILLAR_WIDTH;
-        pillars[i].top.height    = y_cord;
-        pillars[i].bottom.height = SCREEN_HEIGHT;
+        pillars[i].bottom.y      = box.y + y_cord + PILLAR_GAP;
+        pillars[i].bottom.height = box.height - y_cord - PILLAR_GAP;
 
         pillars[i].passed = false;
+
+        pillars[i].accel = PILLAR_ACCEL;
+        pillars[i].speed = PILLAR_SPEED;
     }
 }
 
 void update_game(void)
 {
-    switch (state) {
-    case STANDBY:
-        if (IsKeyPressed(KEY_SPACE)) {
-            bird_velocity = BIRD_PUSH;
-            state         = RUNNING;
-        }
-        break;
+    if (IsWindowResized()) {
+        float bird_ratio_x = (bird.pos.x - box.x) / box.width;
+        float bird_ratio_y = (bird.pos.y - box.y) / box.height;
 
-    case RUNNING:
-        bird.pos.y    += bird_velocity * GetFrameTime();
-        bird.radius.y -= bird_velocity * 0.01 * GetFrameTime();
-        bird.radius.x += bird_velocity * 0.01 * GetFrameTime();
-        bird_velocity += GRAVITY       * GetFrameTime();
+        Pillars pillars_ratio[PILLARS_COUNT] = {0};
+        for (int i = 0; i < PILLARS_COUNT; ++i) {
+            pillars_ratio[i].top.x      = (pillars[i].top.x - box.x) / box.width;
+            pillars_ratio[i].top.height = pillars[i].top.height / box.height;
 
-        pillar_velocity += pillar_accel * GetFrameTime();
-
-        if (IsKeyPressed(KEY_SPACE)) {
-            bird_velocity = BIRD_PUSH;
+            pillars_ratio[i].bottom.x      = (pillars[i].bottom.x - box.x) / box.width;
+            pillars_ratio[i].bottom.y      = (pillars[i].bottom.y - box.y) / box.height;
+            pillars_ratio[i].bottom.height = pillars[i].bottom.height / box.height;
         }
 
-        if (IsKeyPressed(KEY_P)) {
-            state = PAUSED;
+        int new_screen_width  = GetScreenWidth();
+        int new_screen_height = GetScreenHeight();
+
+        if (new_screen_width / 16 >= new_screen_height / 9) {
+            box.height = new_screen_height;
+            box.width  = box.height * 16 / 9;
+        } else {
+            box.width  = new_screen_width;
+            box.height = box.width * 9 / 16;
         }
 
-        if (bird.pos.y < 0 - BIRD_RADIUS ||
-            bird.pos.y > SCREEN_HEIGHT + BIRD_RADIUS) {
-            state      = OVER;
-            bird.color = RED;
+        box.x = (new_screen_width  - box.width)  * 0.5;
+        box.y = (new_screen_height - box.height) * 0.5;
+
+        bird.pos    = (Vector2){box.x + box.width * bird_ratio_x, box.y + box.height * bird_ratio_y};
+        bird.radius = (Vector2){BIRD_RADIUS, BIRD_RADIUS};
+        bird.speed  = BIRD_FLAP;
+
+        for (int i = 0; i < PILLARS_COUNT; ++i) {
+            pillars[i].top.x      = box.x + box.width * pillars_ratio[i].top.x;
+            pillars[i].top.y      = box.y;
+            pillars[i].top.width  = pillars[i].bottom.width = PILLAR_WIDTH;
+            pillars[i].top.height = box.height * pillars_ratio[i].top.height;
+
+            pillars[i].bottom.x      = box.x + box.width * pillars_ratio[i].bottom.x;
+            pillars[i].bottom.y      = box.y + box.height * pillars_ratio[i].bottom.y;
+            pillars[i].bottom.height = box.height * pillars_ratio[i].bottom.height;
+
+            pillars[i].accel = PILLAR_ACCEL;
+            pillars[i].speed = PILLAR_SPEED;
         }
-
-        for (int i = 0; i < 3; ++i) {
-            pillars[i].top.x = pillars[i].bottom.x -= pillar_velocity * GetFrameTime();
-
-            if (pillars[i].top.x < -PILLAR_WIDTH) {
-                float y_cord          = random_piller_y();
-                pillars[i].top.x      = pillars[i].bottom.x = SCREEN_WIDTH;
-                pillars[i].top.y      = 0;
-                pillars[i].bottom.y   = y_cord + PILLAR_GAP;
-                pillars[i].top.height = y_cord;
-                pillars[i].passed     = false;
-            }
-
-            if (pillars[i].top.x <= bird.pos.x) {
-                if (!pillars[i].passed) {
-                    score += 1;
-                }
-                pillars[i].passed = true;
-            }
-
-            if (CheckCollisionCircleRec(bird.pos, BIRD_RADIUS, pillars[i].top) ||
-                CheckCollisionCircleRec(bird.pos, BIRD_RADIUS, pillars[i].bottom)) {
-                state      = OVER;
-                bird.color = RED;
-            }
-        }
-        break;
-
-    case PAUSED:
-        if (IsKeyPressed(KEY_P)) {
-            state = RUNNING;
-        }
-        break;
-
-    case OVER:
-        if (IsKeyPressed(KEY_SPACE)) {
-            init_game();
-            state = STANDBY;
-        }
-        break;
     }
 
-    // handle window resize events
-    if (IsWindowResized()) {
-        init_game();
+    if (!game_over) {
+        if (!pause) {
+            if (IsKeyPressed(KEY_P)) pause = true;
+
+            if (IsKeyPressed(KEY_SPACE)) bird.speed = BIRD_FLAP;
+
+            bird.pos.y    += bird.speed * GetFrameTime();
+            bird.radius.y -= bird.speed * 0.02 * GetFrameTime();
+            bird.radius.x += bird.speed * 0.02 * GetFrameTime();
+            bird.speed    += BIRD_GRAVITY * GetFrameTime();
+
+            if (bird.pos.y < box.y - BIRD_RADIUS ||
+                bird.pos.y > box.y + box.height + BIRD_RADIUS) {
+                game_over  = true;
+                bird.color = RED;
+            }
+
+            for (int i = 0; i < PILLARS_COUNT; ++i) {
+                pillars[i].top.x = pillars[i].bottom.x -= pillars[i].speed * GetFrameTime();
+                pillars[i].speed += pillars[i].accel * GetFrameTime();
+
+                if (pillars[i].top.x < box.x - PILLAR_WIDTH) {
+                    float y_cord = random_piller_y();
+                    pillars[i].top.x      = pillars[i].bottom.x += (PILLAR_WIDTH + PILLAR_PADDING) * (PILLARS_COUNT - 1);
+                    pillars[i].top.y      = box.y;
+                    pillars[i].top.height = y_cord;
+
+                    pillars[i].bottom.y      = box.y + y_cord + PILLAR_GAP;
+                    pillars[i].bottom.height = box.height - y_cord - PILLAR_GAP;
+                    pillars[i].passed        = false;
+                }
+
+                if (pillars[i].top.x <= bird.pos.x) {
+                    if (!pillars[i].passed) {
+                        score += 1;
+                        pillars[i].passed = true;
+                    }
+                }
+
+                if (CheckCollisionCircleRec(bird.pos, BIRD_RADIUS, pillars[i].top) ||
+                    CheckCollisionCircleRec(bird.pos, BIRD_RADIUS, pillars[i].bottom)) {
+                    game_over  = true;
+                    bird.color = RED;
+                }
+            }
+        } else {
+            if (IsKeyPressed(KEY_SPACE)) pause = false;
+        }
+    } else {
+        if (IsKeyPressed(KEY_ENTER)) {
+            game_over = false;
+            pause     = true;
+
+            init_game();
+        }
     }
 }
 
 void draw_game(void)
 {
     BeginDrawing();
-    ClearBackground(BLACK);
+    {
+        ClearBackground(BLACK);
+        DrawRectangleRec(box, BG_COLOR);
 
-    // Game intro
-    if (state == STANDBY) {
-        DrawText(TextFormat("Press <Space> to start"),
-                 SCREEN_WIDTH  / 2.0 - MeasureText("Press <Space> to start", FONT_SIZE) / 2.0,
-                 SCREEN_HEIGHT / 2.0 - 20.0 / 2.0 * GetScreenHeight() / 600.0, FONT_SIZE, GRAY);
-    } else if (state == PAUSED) {
-        DrawText(TextFormat("Paused"),
-                 SCREEN_WIDTH  / 2.0 - MeasureText("Paused", FONT_SIZE) / 2.0,
-                 SCREEN_HEIGHT / 3.0, FONT_SIZE, GRAY);
-    } else if (state == OVER) {
-        DrawText(TextFormat("Game over"),
-                 SCREEN_WIDTH  / 2.0 - MeasureText("Game over", FONT_SIZE) / 2.0,
-                 SCREEN_HEIGHT / 3.0, FONT_SIZE, GRAY);
+        const char *text = TextFormat("%d", score);
+        if (score > 0) {
+            DrawText(text,
+                     box.x + box.width  * 0.5 - MeasureText(text, FONT_SIZE * 5) * 0.5,
+                     box.y + box.height * 0.5 - FONT_SIZE * 2.5, FONT_SIZE * 5,
+                     GRAY);
+        }
+
+        // Bird
+        DrawEllipse(bird.pos.x, bird.pos.y, bird.radius.x, bird.radius.y, bird.color);
+
+        // Pillars
+        for (int i = 0; i < PILLARS_COUNT; ++i) {
+            DrawRectangleRec(pillars[i].top,    RAYWHITE);
+            DrawRectangleRec(pillars[i].bottom, RAYWHITE);
+        }
+
+        text = "Press <Space> to start";
+        if (pause) {
+            DrawText(text,
+                     box.x + box.width  * 0.5 - MeasureText(text, FONT_SIZE) * 0.5,
+                     box.y + box.height * 0.8, FONT_SIZE, GRAY);
+        }
+
+        if (game_over) {
+            text = "Game over";
+            DrawText(text,
+                     box.x + box.width * 0.5 - MeasureText(text, FONT_SIZE * 2) * 0.5,
+                     box.y + box.height / 4, FONT_SIZE * 2, GRAY);
+
+            text = "Press <Enter> to restart";
+            DrawText(text,
+                     box.x + box.width  * 0.5 - MeasureText(text, FONT_SIZE) * 0.5,
+                     box.y + box.height * 0.8, FONT_SIZE, GRAY);
+        }
+
+        DrawRectangle(0, 0, box.x, box.height, BLACK);
+        DrawRectangle(box.x + box.width, 0, box.x * 2, box.height, BLACK);
     }
-
-    // Score
-    if (score > 0) {
-        DrawText(TextFormat("%d", score),
-                 SCREEN_WIDTH  / 2.0 - MeasureText(TextFormat("%d", score), FONT_SIZE * 5.0) / 2.0,
-                 SCREEN_HEIGHT / 2.0 - FONT_SIZE * 5.0 / 2.0, FONT_SIZE * 5.0, GRAY);
-    }
-
-    // Bird
-    DrawEllipse(bird.pos.x, bird.pos.y, bird.radius.x, bird.radius.y, bird.color);
-
-    // Pillars
-    for (int i = 0; i < 3; ++i) {
-        DrawRectangleRec(pillars[i].top, RAYWHITE);
-        DrawRectangleRec(pillars[i].bottom, RAYWHITE);
-    }
-
     EndDrawing();
 }
 
 int main(void)
 {
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
-    InitWindow(800, 600, "Flappy Bird");
-    // SetTargetFPS(FPS);
+    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Flappy bird");
+    SetTargetFPS(FPS);
 
-    SetRandomSeed(time(0));
     init_game();
 
     while (!WindowShouldClose()) {
         update_game();
         draw_game();
     }
-
     CloseWindow();
     return 0;
 }
