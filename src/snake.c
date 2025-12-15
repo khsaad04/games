@@ -44,11 +44,11 @@ typedef struct {
     bool active;
 } Apple;
 
-static State game = STANDBY;
-static int score = 0;
-static Snake snake = {0};
-static Vector2 snake_pos[SNAKE_CAP] = {0};
-static Apple apple = {0};
+State game = STANDBY;
+int score = 0;
+Snake snake = {0};
+Vector2 snake_pos[SNAKE_CAP] = {0};
+Apple apple = {0};
 
 void init_game(void);
 void update_game(void);

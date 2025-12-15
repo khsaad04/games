@@ -35,13 +35,13 @@ typedef struct {
     bool      passed;
 } Pillars;
 
-static int     score = 0;
-static Bird    bird  = {0};
-static Pillars pillars[PILLARS_COUNT] = {0};
-static bool    pause     = true;
-static bool    game_over = false;
+int     score = 0;
+Bird    bird  = {0};
+Pillars pillars[PILLARS_COUNT] = {0};
+bool    pause     = true;
+bool    game_over = false;
 
-static Rectangle box = {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT};
+Rectangle box = {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT};
 
 float random_piller_y(void)
 {

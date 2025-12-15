@@ -43,16 +43,16 @@ typedef struct {
     bool      hit[BRICK_ROWS][BRICK_COLS];
 } Bricks;
 
-static Paddle paddle    = {0};
-static Ball   ball      = {0};
-static Bricks bricks    = {0};
-static int    score     =  0;
-static bool   pause     = true;
-static bool   game_over = false;
+Paddle paddle    = {0};
+Ball   ball      = {0};
+Bricks bricks    = {0};
+int    score     =  0;
+bool   pause     = true;
+bool   game_over = false;
 
-static Rectangle box = {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT};
+Rectangle box = {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT};
 
-static inline void init_bricks(void)
+void init_bricks(void)
 {
     for (int i = 0; i < BRICK_ROWS; ++i) {
         for (int j = 0; j < BRICK_COLS; ++j) {
@@ -65,7 +65,7 @@ static inline void init_bricks(void)
     }
 }
 
-static inline void init_game(void)
+void init_game(void)
 {
     score = 0;
 
@@ -85,7 +85,7 @@ static inline void init_game(void)
     init_bricks();
 }
 
-static inline void update_game(void)
+void update_game(void)
 {
     if (IsWindowResized()) {
         float paddle_ratio_x = (paddle.rect.x - box.x) / box.width;
@@ -225,7 +225,7 @@ static inline void update_game(void)
     }
 }
 
-static inline void draw_game(void)
+void draw_game(void)
 {
     BeginDrawing();
     {
