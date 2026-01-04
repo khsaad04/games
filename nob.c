@@ -68,9 +68,6 @@ int main(int argc, char **argv)
                 nob_log(NOB_ERROR, "invalid name: %s", name);
                 return 1;
             }
-        } else {
-            nob_log(NOB_ERROR, "invalid argument: %s", arg);
-            return 1;
         }
     }
 
