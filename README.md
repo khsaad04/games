@@ -9,9 +9,9 @@ I made this to learn how to use raylib and also because making games is fun.
     <td>snake</td>
   </tr>
   <tr>
-    <td><img src="assets/breakout.png"></td>
-    <td><img src="assets/flappy_bird.png"></td>
-    <td><img src="assets/snake.png"></td>
+    <td><img src="preview/breakout.png"></td>
+    <td><img src="preview/flappy_bird.png"></td>
+    <td><img src="preview/snake.png"></td>
   </tr>
 </table>
 
