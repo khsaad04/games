@@ -2,35 +2,22 @@
 #define NOB_STRIP_PREFIX
 #include "nob.h"
 
-#include <stdbool.h>
-#include <string.h>
-
-#define BUILD_PATH "build/"
-#define SRC_PATH "src/"
+#define BUILD_PATH  "build/"
+#define SRC_PATH    "src/"
 #define RAYLIB_PATH "raylib-5.5_linux_amd64/"
 
-typedef enum { DEBUG, RELEASE } Build_Type;
-
-bool build_game(Cmd *cmd, const char *name, Build_Type build_type)
+bool build_game(Cmd *cmd, const char *name)
 {
     cmd_append(cmd, "cc");
+    cmd_append(cmd, "-Wall", "-Wextra", "-O2");
 
-    switch (build_type) {
-    case DEBUG:
-        cmd_append(cmd, "-Wall", "-Wextra", "-ggdb");
-        break;
-    case RELEASE:
-        cmd_append(cmd, "-Ofast", "-march=native");
-        break;
-    }
-
-    cmd_append(cmd, "-I./"RAYLIB_PATH"include",
-               "-o", temp_sprintf("%s%s", BUILD_PATH, name),
+    cmd_append(cmd, "-I./"RAYLIB_PATH"include",  "-o",
+               temp_sprintf("%s%s", BUILD_PATH, name),
                temp_sprintf("%s%s.c", SRC_PATH, name),
                "-L./"RAYLIB_PATH"lib",
                "-l:libraylib.a", "-lm");
 
-    if (!cmd_run_sync_and_reset(cmd)) return false;
+    if (!cmd_run(cmd)) return false;
     return true;
 }
 
@@ -41,7 +28,6 @@ int main(int argc, char **argv)
 
     Cmd cmd = {0};
 
-    Build_Type build_type = RELEASE;
     bool run = false;
     const char *name;
 
@@ -49,12 +35,9 @@ int main(int argc, char **argv)
     while (argc > 0) {
         arg = shift(argv, argc);
 
-        if (strcmp(arg, "-debug") == 0) {
-            build_type = DEBUG;
-
-        } else if (strcmp(arg, "-run") == 0) {
+        if (strcmp(arg, "-run") == 0) {
             if (argc <= 0) {
-                nob_log(NOB_ERROR, "expected arg: name of the binary to run");
+                nob_log(ERROR, "expected arg: name of the binary to run");
                 return 1;
             }
 
@@ -65,19 +48,22 @@ int main(int argc, char **argv)
                 run = true;
                 name = arg;
             } else {
-                nob_log(NOB_ERROR, "invalid name: %s", name);
+                nob_log(ERROR, "invalid name: %s", name);
                 return 1;
             }
+        } else {
+            nob_log(ERROR, "invalid argument: %s", arg);
+            return 1;
         }
     }
 
-    if (!build_game(&cmd, "breakout",    build_type)) return 1;
-    if (!build_game(&cmd, "flappy_bird", build_type)) return 1;
-    if (!build_game(&cmd, "snake",       build_type)) return 1;
+    if (!build_game(&cmd, "breakout"))    return 1;
+    if (!build_game(&cmd, "flappy_bird")) return 1;
+    if (!build_game(&cmd, "snake"))       return 1;
 
     if (run) {
         cmd_append(&cmd, temp_sprintf("./build/%s", name));
-        if (!cmd_run_sync_and_reset(&cmd)) return 1;
+        if (!cmd_run(&cmd)) return 1;
     }
 
     return 0;
