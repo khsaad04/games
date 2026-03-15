@@ -31,6 +31,8 @@ int main(int argc, char **argv)
     bool run = false;
     const char *name;
 
+    bool build = true;
+
     const char *arg = shift(argv, argc);
     while (argc > 0) {
         arg = shift(argv, argc);
@@ -51,15 +53,16 @@ int main(int argc, char **argv)
                 nob_log(ERROR, "invalid name: %s", name);
                 return 1;
             }
-        } else {
-            nob_log(ERROR, "invalid argument: %s", arg);
-            return 1;
+        } else if (strcmp(arg, "-no-build") == 0) {
+            build = false;
         }
     }
 
-    if (!build_game(&cmd, "breakout"))    return 1;
-    if (!build_game(&cmd, "flappy_bird")) return 1;
-    if (!build_game(&cmd, "snake"))       return 1;
+    if (build) {
+        if (!build_game(&cmd, "breakout"))    return 1;
+        if (!build_game(&cmd, "flappy_bird")) return 1;
+        if (!build_game(&cmd, "snake"))       return 1;
+    }
 
     if (run) {
         cmd_append(&cmd, temp_sprintf("./build/%s", name));
