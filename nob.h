@@ -1,4 +1,4 @@
-/* nob - v3.3.0 - Public Domain - https://github.com/tsoding/nob.h
+/* nob - v3.5.0 - Public Domain - https://github.com/tsoding/nob.h
 
    This library is the next generation of the [NoBuild](https://github.com/tsoding/nobuild) idea.
 
@@ -219,13 +219,16 @@ typedef enum {
 // Any messages with the level below nob_minimal_log_level are going to be suppressed.
 extern Nob_Log_Level nob_minimal_log_level;
 
-typedef void (nob_log_handler)(Nob_Log_Level level, const char *fmt, va_list args);
+typedef void (Nob_Log_Handler)(Nob_Log_Level level, const char *fmt, va_list args);
+NOB_DEPRECATED("Uncapitalized nob_log_handler type is deprecated. Use Nob_Log_Handler instead. It's just when we were releasing the log handler feature we forgot that we had a convention that all the types must be capitalized like that. Sorry about it!")
+typedef Nob_Log_Handler nob_log_handler;
 
-NOBDEF void nob_set_log_handler(nob_log_handler *handler);
-NOBDEF nob_log_handler *nob_get_log_handler(void);
+NOBDEF void nob_set_log_handler(Nob_Log_Handler *handler);
+NOBDEF Nob_Log_Handler *nob_get_log_handler(void);
 
-NOBDEF nob_log_handler nob_default_log_handler;
-NOBDEF nob_log_handler nob_cancer_log_handler;
+NOBDEF Nob_Log_Handler nob_default_log_handler;
+NOBDEF Nob_Log_Handler nob_cancer_log_handler;
+NOBDEF Nob_Log_Handler nob_null_log_handler;
 
 NOBDEF void nob_log(Nob_Log_Level level, const char *fmt, ...) NOB_PRINTF_FORMAT(2, 3);
 
@@ -380,6 +383,8 @@ NOBDEF void nob_dir_entry_close(Nob_Dir_Entry dir);
         (da)->count = (new_size);       \
     } while (0)
 
+#define nob_da_pop(da) (da)->items[(NOB_ASSERT((da)->count > 0), --(da)->count)]
+#define nob_da_first(da) (da)->items[(NOB_ASSERT((da)->count > 0), 0)]
 #define nob_da_last(da) (da)->items[(NOB_ASSERT((da)->count > 0), (da)->count-1)]
 #define nob_da_remove_unordered(da, i)               \
     do {                                             \
@@ -880,6 +885,7 @@ typedef struct {
 
 NOBDEF const char *nob_temp_sv_to_cstr(Nob_String_View sv);
 
+NOBDEF Nob_String_View nob_sv_chop_while(Nob_String_View *sv, int (*p)(int x));
 NOBDEF Nob_String_View nob_sv_chop_by_delim(Nob_String_View *sv, char delim);
 NOBDEF Nob_String_View nob_sv_chop_left(Nob_String_View *sv, size_t n);
 // If `sv` starts with `prefix` chops off the prefix and returns true.
@@ -1846,14 +1852,14 @@ NOBDEF bool nob_cmd_run_sync_redirect_and_reset(Nob_Cmd *cmd, Nob_Cmd_Redirect r
     return nob_proc_wait(p);
 }
 
-static nob_log_handler *nob__log_handler = &nob_default_log_handler;
+static Nob_Log_Handler *nob__log_handler = &nob_default_log_handler;
 
-NOBDEF void nob_set_log_handler(nob_log_handler *handler)
+NOBDEF void nob_set_log_handler(Nob_Log_Handler *handler)
 {
     nob__log_handler = handler;
 }
 
-NOBDEF nob_log_handler *nob_get_log_handler(void)
+NOBDEF Nob_Log_Handler *nob_get_log_handler(void)
 {
     return nob__log_handler;
 }
@@ -1879,6 +1885,13 @@ NOBDEF void nob_default_log_handler(Nob_Log_Level level, const char *fmt, va_lis
 
     vfprintf(stderr, fmt, args);
     fprintf(stderr, "\n");
+}
+
+NOBDEF void nob_null_log_handler(Nob_Log_Level level, const char *fmt, va_list args)
+{
+    NOB_UNUSED(level);
+    NOB_UNUSED(fmt);
+    NOB_UNUSED(args);
 }
 
 NOBDEF void nob_cancer_log_handler(Nob_Log_Level level, const char *fmt, va_list args)
@@ -2497,6 +2510,20 @@ NOBDEF void nob_sb_pad_align(Nob_String_Builder *sb, size_t size)
     }
 }
 
+NOBDEF Nob_String_View nob_sv_chop_while(Nob_String_View *sv, int (*p)(int x))
+{
+    size_t i = 0;
+    while (i < sv->count && p(sv->data[i])) {
+        i += 1;
+    }
+
+    Nob_String_View result = nob_sv_from_parts(sv->data, i);
+    sv->count -= i;
+    sv->data  += i;
+
+    return result;
+}
+
 NOBDEF Nob_String_View nob_sv_chop_by_delim(Nob_String_View *sv, char delim)
 {
     size_t i = 0;
@@ -2784,8 +2811,10 @@ NOBDEF char *nob_temp_running_executable_path(void)
         #define Log_Level Nob_Log_Level
         #define minimal_log_level nob_minimal_log_level
         #define log_handler nob_log_handler
+        #define Log_Handler Nob_Log_Handler
         #define set_log_handler nob_set_log_handler
         #define get_log_handler nob_get_log_handler
+        #define null_log_handler nob_null_log_handler
         #define default_log_handler nob_default_log_handler
         #define cancer_log_handler nob_cancer_log_handler
         // NOTE: Name log is already defined in math.h and historically always was the natural logarithmic function.
@@ -2828,6 +2857,8 @@ NOBDEF char *nob_temp_running_executable_path(void)
         #define da_resize nob_da_resize
         #define da_reserve nob_da_reserve
         #define da_last nob_da_last
+        #define da_first nob_da_first
+        #define da_pop nob_da_pop
         #define da_remove_unordered nob_da_remove_unordered
         #define da_foreach nob_da_foreach
         #define fa_append nob_fa_append
@@ -2906,6 +2937,7 @@ NOBDEF char *nob_temp_running_executable_path(void)
         #define String_View Nob_String_View
         #define temp_sv_to_cstr nob_temp_sv_to_cstr
         #define sv_chop_by_delim nob_sv_chop_by_delim
+        #define sv_chop_while nob_sv_chop_while
         #define sv_chop_prefix nob_sv_chop_prefix
         #define sv_chop_left nob_sv_chop_left
         #define sv_trim nob_sv_trim
@@ -2927,6 +2959,11 @@ NOBDEF char *nob_temp_running_executable_path(void)
 /*
    Revision history:
 
+      3.5.0 (2026-03-13) Add nob_null_log_handler (by @rexim)
+                         Rename nob_log_handler to Nob_Log_Handler (by @rexim)
+      3.4.0 (2026-03-12) Add nob_da_first() (by @rexim)
+                         Add nob_da_pop() (by @rexim)
+                         Add nob_sv_chop_while() (by @rexim)
       3.3.0 (2026-03-07) Add nob_sv_chop_prefix() (by @rexim)
       3.2.2 (2026-02-06) Fix read_entire_dir crash on empty path (by @ysoftware)
       3.2.1 (2026-01-29) Fix the implicit declaration error when nob is included as a header (by @ysoftware)
