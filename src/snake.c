@@ -1,22 +1,9 @@
 #include <raylib.h>
 
-/*#define CHECKERBOARD*/
-
-#ifdef CHECKERBOARD
-
-#define SNAKE_COLOR BLUE
-#define APPLE_COLOR RED
-#define BG1 (Color){20, 20, 20, 255}
-#define BG2 (Color){10, 10, 10, 255}
-
-#else
-
-#define SNAKE_COLOR RAYWHITE
-#define APPLE_COLOR RAYWHITE
-#define BG1 BLACK
-#define BG2 BLACK
-
-#endif // CHECKERBOARD
+#define SNAKE_COLOR ((Color){0xDE, 0xE4, 0xE0, 0xFF})
+#define APPLE_COLOR ((Color){0xDE, 0xE4, 0xE0, 0xFF})
+#define BG1 ((Color){0x0F, 0x15, 0x13, 0xFF})
+#define BG2 ((Color){0x0F, 0x15, 0x13, 0xFF})
 
 #define SCALE 1.0
 #define SCREEN_WIDTH (800 * SCALE)
@@ -197,16 +184,7 @@ void draw_game(void)
     BeginDrawing();
     // draw background
     ClearBackground(BG1);
-#ifdef CHECKERBOARD
-    for (int i = 0; i < ROWS; ++i) {
-        for (int j = 0; j < COLS; ++j) {
-            if ((i + j) % 2 == 0) {
-                DrawRectangleV((Vector2){j * CELL_SIZE, i * CELL_SIZE},
-                               (Vector2){CELL_SIZE, CELL_SIZE}, BG2);
-            }
-        }
-    }
-#endif
+
     // draw snake
     for (int i = 0; i < snake.len; ++i) {
         DrawRectangleV(snake.cells[i].pos, (Vector2){CELL_SIZE, CELL_SIZE},

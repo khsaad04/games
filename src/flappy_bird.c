@@ -19,8 +19,8 @@
 #define PILLAR_SPEED (150 * SCALE_X)
 #define PILLAR_ACCEL (1.5 * SCALE_X)
 
-#define BG_COLOR ((Color){0x14, 0x14, 0x0C, 0xFF})
-#define FG_COLOR ((Color){0xE6, 0xE3, 0xD5, 0xFF})
+#define BG_COLOR ((Color){0x0F, 0x15, 0x13, 0xFF})
+#define FG_COLOR ((Color){0xDE, 0xE4, 0xE0, 0xFF})
 #define FONT_SIZE (20 * SCALE_Y)
 
 typedef struct {
